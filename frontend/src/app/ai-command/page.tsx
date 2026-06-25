@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+
 type User = {
   id?: string;
   _id?: string;
@@ -96,19 +99,27 @@ export default function AICommandPage() {
         return;
       }
 
-      const response = await fetch("http://127.0.0.1:8000/api/ai/command", {
+      const response = await fetch(`${API_BASE_URL}/api/ai/command`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          command,
-        }),
+        body: JSON.stringify({ command }),
       });
 
       const text = await response.text();
-      const data = text ? JSON.parse(text) : {};
+
+      let data: Partial<AIAgentResponse> & {
+        detail?: string;
+        message?: string;
+      } = {};
+
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error("Invalid response from backend.");
+      }
 
       if (!response.ok) {
         const message =
@@ -245,7 +256,9 @@ export default function AICommandPage() {
             <PromptButton
               label="Help with DA assignment"
               onClick={() =>
-                setAiCommand("How should I complete my Data Analytics assignment?")
+                setAiCommand(
+                  "How should I complete my Data Analytics assignment?"
+                )
               }
             />
             <PromptButton
@@ -257,7 +270,9 @@ export default function AICommandPage() {
             <PromptButton
               label="Attendance risk"
               onClick={() =>
-                setAiCommand("Check my attendance risk and suggest what I should do.")
+                setAiCommand(
+                  "Check my attendance risk and suggest what I should do."
+                )
               }
             />
           </div>
