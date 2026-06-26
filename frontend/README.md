@@ -1,528 +1,319 @@
-# CampusAgent AI 🎓🤖
+# 🎓 CampusAgent AI
 
-CampusAgent AI is a full-stack agentic AI student productivity platform built to help students manage their academic workflow using AI.
+> **AI-Powered Student Productivity Platform built with Next.js,
+> FastAPI, Groq LLM, Hugging Face Embeddings, Qdrant Vector Database and
+> Retrieval-Augmented Generation (RAG).**
 
-It allows students to manage subjects, assignments, attendance, uploaded PDFs, extracted questions, AI-generated answers, AI answer evaluation, practice tests, weak topic analysis, and academic analytics from one unified dashboard.
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.138-009688?logo=fastapi)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
+![Python](https://img.shields.io/badge/Python-3-yellow?logo=python)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green?logo=mongodb)
+![Groq](https://img.shields.io/badge/Groq-LLM-orange)
+![Qdrant](https://img.shields.io/badge/Qdrant-VectorDB-red)
+![RAG](https://img.shields.io/badge/RAG-Enabled-success)
 
----
+------------------------------------------------------------------------
 
-## 🚀 Project Overview
+# 🌐 Live Demo
 
-CampusAgent AI is designed as an AI-powered academic assistant for students.
+**Frontend:** https://campusagent-ai.vercel.app
 
-Students can upload assignment PDFs, extract questions, generate AI answers, write their own answers, evaluate them using AI, create practice tests, track performance, detect weak topics, and monitor academic progress through analytics dashboards.
+**Login:** https://campusagent-ai.vercel.app/login
 
-This project demonstrates full-stack development, authentication, database design, REST API development, PDF processing, AI/LLM integration, analytics dashboards, and recruiter-ready product thinking.
+**Backend API:** https://campusagent-ai-backend.onrender.com
 
----
+**Swagger:** https://campusagent-ai-backend.onrender.com/docs
 
-## ✨ Features
+**GitHub:** https://github.com/AnzarKhan855/campusagent-ai
 
-### Authentication
+------------------------------------------------------------------------
 
-* JWT-based signup and login
-* Protected user dashboard
-* User-specific academic data
+# 📖 Overview
 
-### Dashboard
+CampusAgent AI is a production-style full-stack academic platform that
+combines modern web technologies with AI to help students manage their
+complete study workflow.
 
-* Academic overview
-* Subjects, assignments, attendance, and AI assistant access
-* Student productivity-focused UI
+It enables students to manage subjects, assignments, attendance, AI
+workspaces, practice tests, analytics, PDF libraries, and
+Retrieval-Augmented Generation (RAG) based document chat in one unified
+application.
 
-### Subjects Management
+------------------------------------------------------------------------
 
-* Create subjects
-* View subjects
-* Update subjects
-* Delete subjects
+# ✨ Features
 
-### Assignments Management
+## Authentication
 
-* Create assignments
-* Edit assignment details
-* Delete assignments
-* Track assignment status and priority
+-   JWT Login & Signup
+-   Protected Routes
+-   Secure Sessions
 
-### Attendance Management
+## Dashboard
 
-* Add attendance records
-* Track subject-wise attendance
-* Identify attendance risk
+-   Academic overview
+-   Quick statistics
+-   Navigation hub
 
-### AI Academic Assistant
+## Subjects
 
-* Rule-based academic planner
-* Groq-powered AI academic assistant
-* AI command box for academic productivity
+-   Create / Update / Delete
+-   Organize courses
 
-### PDF Upload and Question Extraction
+## Assignments
 
-* Upload assignment PDFs
-* Extract PDF text using `pdfminer.six`
-* Extract questions from uploaded PDFs
-* Store extracted questions in MongoDB
+-   CRUD operations
+-   Priority & due dates
+-   Assignment workspace
+-   PDF upload
 
-### AI Answer System
+## Attendance
 
-* Save student answer per question
-* Generate AI answer for each question
-* Evaluate student answer using AI
-* Save score, feedback, strengths, missing points, and improved/model answer
-* Mark questions as important
-* Set difficulty: easy, medium, hard
-* Auto-tag questions with topic, difficulty, and importance
+-   Subject-wise tracking
+-   Attendance analytics
+-   Risk monitoring
 
-### PDF Report Generation
+## AI Command Center
 
-* Generate downloadable answer PDF
-* Export AI-generated answers and evaluated content using ReportLab
+-   AI productivity assistant
+-   Academic planning
+-   Study guidance
 
-### Practice Test Mode
+## AI Workspace
 
-* Create practice test from extracted assignment questions
-* Save test answers
-* Submit practice test
-* AI evaluates answers
-* Final score and percentage report
-* Weak topic detection
+-   AI answer generation
+-   Rich answer editor
+-   Regeneration
 
-### Analytics Dashboard
+## Practice Tests
 
-* Score trend chart
-* Test status pie chart
-* Topic performance bar chart
-* Weak topic frequency chart
-* Pivot-style topic summary table
-* Recent practice tests section
+-   Generate tests
+-   Save answers
+-   AI evaluation
+-   Performance analysis
 
----
+## Analytics
 
-## 🧠 AI/LLM Usage
+-   Charts
+-   Progress tracking
+-   Weak topic visualization
 
-CampusAgent AI uses Groq API to power academic AI features such as:
+## PDF Library
 
-* AI-generated answers
-* AI answer evaluation
-* Feedback generation
-* Strength and weakness detection
-* Improved/model answer generation
-* Weak topic analysis
-* Academic assistant responses
+-   Upload PDFs
+-   Rename
+-   Delete
+-   Manage documents
 
----
+## AI PDF Chat (RAG)
 
-## 🛠 Tech Stack
+-   Chat with a selected PDF
+-   Semantic search
+-   Context-aware responses
+-   Source references
 
-### Frontend
+------------------------------------------------------------------------
 
-* Next.js
-* TypeScript
-* Tailwind CSS
-* Recharts
+# 🤖 AI Stack
 
-### Backend
+-   Groq LLM
+-   Hugging Face Embeddings API
+-   Qdrant Vector Database
+-   Retrieval-Augmented Generation (RAG)
+-   Semantic Search
 
-* FastAPI
-* Python
-* JWT Authentication
-* Groq API
-* pdfminer.six
-* ReportLab
+------------------------------------------------------------------------
 
-### Database
+# 🏗 RAG Pipeline
 
-* MongoDB Atlas
-* Async Motor
-
-### Tools
-
-* Git
-* GitHub
-* Postman
-* VS Code
-
-### Deployment Planned
-
-* Frontend: Vercel
-* Backend: Render
-
----
-
-## 🏗 Architecture
-
-```text
-CampusAgent AI
-│
-├── Frontend: Next.js + TypeScript + Tailwind CSS
-│   ├── Dashboard UI
-│   ├── Assignments UI
-│   ├── Subjects UI
-│   ├── Attendance UI
-│   ├── Practice Test UI
-│   └── Analytics Dashboard
-│
-├── Backend: FastAPI
-│   ├── Auth APIs
-│   ├── Dashboard APIs
-│   ├── Subjects APIs
-│   ├── Assignments APIs
-│   ├── Attendance APIs
-│   ├── PDF Upload APIs
-│   ├── AI Evaluation APIs
-│   ├── Practice Test APIs
-│   └── Analytics APIs
-│
-├── Database: MongoDB Atlas
-│   ├── Users
-│   ├── Subjects
-│   ├── Assignments
-│   ├── Extracted Questions
-│   ├── Practice Tests
-│   └── Analytics Data
-│
-└── AI Layer
-    ├── Groq LLM
-    ├── Rule-Based Planner
-    ├── AI Answer Generator
-    ├── AI Answer Evaluator
-    └── Weak Topic Analyzer
+``` text
+Upload PDF
+      │
+PDF Parsing
+      │
+Chunking
+      │
+Embedding Generation
+(Hugging Face)
+      │
+Qdrant Vector Storage
+      │
+Semantic Search
+      │
+Groq LLM
+      │
+Grounded AI Response
 ```
 
----
+------------------------------------------------------------------------
 
-## 📁 Folder Structure
+# 🛠 Tech Stack
 
-```text
+  Category      Technologies
+  ------------- ------------------------------------------
+  Frontend      Next.js, React, TypeScript, Tailwind CSS
+  Backend       FastAPI, Python
+  Database      MongoDB Atlas
+  AI            Groq
+  Embeddings    Hugging Face API
+  Vector DB     Qdrant
+  Charts        Recharts
+  PDF Parsing   pdfminer.six, PyMuPDF
+  Deployment    Vercel, Render
+
+------------------------------------------------------------------------
+
+# 📸 Screenshots
+
+## Login
+
+![Login](screenshots/login.png)
+
+## Dashboard
+
+![Dashboard](screenshots/dashboard.png)
+
+## Assignments
+
+![Assignments](screenshots/assignment.png)
+
+## Attendance
+
+![Attendance](screenshots/attendance.png)
+
+## AI Command
+
+![AI Command](screenshots/ai-command.png)
+
+## AI Workspace
+
+![AI Workspace](screenshots/ai-workspace.png)
+
+## Answer Workspace
+
+![Answer Workspace](screenshots/answer-workspace.png)
+
+## Practice Test
+
+![Practice Test](screenshots/ai-practice-test.png)
+
+## Analytics
+
+![Analytics](screenshots/analytics.png)
+
+## PDF Library
+
+![PDF Library](screenshots/PDF-library.png)
+
+## AI PDF RAG Chat
+
+![RAG Chat](screenshots/ai-pdf-RAG.png)
+
+------------------------------------------------------------------------
+
+# 📁 Folder Structure
+
+``` text
 campusagent-ai/
-│
 ├── backend/
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── routes/
-│   │   ├── models/
-│   │   ├── database/
-│   │   ├── services/
-│   │   └── utils/
-│   │
-│   ├── requirements.txt
-│   ├── .env
-│   └── venv/
-│
 ├── frontend/
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── dashboard/
-│   │   │   ├── assignments/
-│   │   │   ├── practice-tests/
-│   │   │   └── login/
-│   │   │
-│   │   ├── components/
-│   │   │   ├── AssignmentsPanel.tsx
-│   │   │   ├── SubjectsPanel.tsx
-│   │   │   ├── AttendancePanel.tsx
-│   │   │   └── PracticeTestAnalytics.tsx
-│   │   │
-│   │   └── lib/
-│   │
-│   ├── package.json
-│   ├── tailwind.config.ts
-│   └── .env.local
-│
-├── .gitignore
+├── screenshots/
 ├── README.md
-└── package-lock.json
+└── .gitignore
 ```
 
----
+------------------------------------------------------------------------
 
-## 🔗 Important API Routes
+# ⚙️ Local Setup
 
-### Dashboard
+## Clone
 
-```http
-GET /api/dashboard/overview
-```
-
-### Assignment PDF
-
-```http
-POST /api/assignments/{assignment_id}/upload-pdf
-POST /api/assignments/{assignment_id}/extract-questions
-GET /api/assignments/{assignment_id}/generate-pdf
-```
-
-### Question Answering
-
-```http
-PATCH /api/assignments/{assignment_id}/questions/save-answer
-PATCH /api/assignments/{assignment_id}/questions/evaluate-answer
-PATCH /api/assignments/{assignment_id}/questions/generate-ai-answer
-PATCH /api/assignments/{assignment_id}/questions/auto-tag
-```
-
-### Practice Tests
-
-```http
-POST /api/assignments/{assignment_id}/practice-tests/create
-GET /api/assignments/{assignment_id}/practice-tests
-GET /api/practice-tests/{test_id}
-PATCH /api/practice-tests/{test_id}/save-answer
-POST /api/practice-tests/{test_id}/submit
-GET /api/practice-tests/analytics/dashboard-summary
-```
-
----
-
-## ⚙️ Local Setup
-
-### 1. Clone the Repository
-
-```bash
+``` bash
 git clone https://github.com/AnzarKhan855/campusagent-ai.git
 cd campusagent-ai
 ```
 
----
+## Backend
 
-## Backend Setup
-
-### 2. Move to Backend Folder
-
-```bash
+``` bash
 cd backend
-```
-
-### 3. Create Virtual Environment
-
-```bash
 python -m venv venv
-```
-
-### 4. Activate Virtual Environment
-
-For Windows:
-
-```bash
-.\venv\Scripts\activate
-```
-
-### 5. Install Backend Dependencies
-
-```bash
 pip install -r requirements.txt
+uvicorn app.main:app --reload
 ```
 
-### 6. Create `.env` File
+Create `.env`
 
-Create a `.env` file inside the `backend` folder:
-
-```env
-MONGODB_URL=your_mongodb_atlas_connection_string
-DATABASE_NAME=campusagent_ai
-JWT_SECRET_KEY=your_secret_key
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-GROQ_API_KEY=your_groq_api_key
+``` env
+MONGODB_URL=
+DATABASE_NAME=
+JWT_SECRET_KEY=
+GROQ_API_KEY=
+HF_TOKEN=
 ```
 
-### 7. Run Backend Server
+## Frontend
 
-```bash
-.\venv\Scripts\python.exe -m uvicorn app.main:app --reload
-```
-
-Backend will run on:
-
-```text
-http://127.0.0.1:8000
-```
-
-Swagger API Docs:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
----
-
-## Frontend Setup
-
-### 8. Move to Frontend Folder
-
-```bash
+``` bash
 cd frontend
-```
-
-### 9. Install Frontend Dependencies
-
-```bash
 npm install
-```
-
-### 10. Create `.env.local` File
-
-Create a `.env.local` file inside the `frontend` folder:
-
-```env
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
-```
-
-### 11. Run Frontend Server
-
-```bash
 npm run dev
 ```
 
-Frontend will run on:
+Create `.env.local`
 
-```text
-http://localhost:3000
+``` env
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
 ```
 
----
+------------------------------------------------------------------------
 
-## 📸 Screenshots
+# 🚀 Deployment
 
-### Login Page
-![Login Page](./screenshots/login.png)
+-   Frontend: Vercel
+-   Backend: Render
+-   Database: MongoDB Atlas
+-   Vector Database: Qdrant
 
-### Dashboard Overview
-![Dashboard](./screenshots/dashboard.png)
+------------------------------------------------------------------------
 
-### Subjects Management
-![Subjects](./screenshots/subjects.png)
+# 🔮 Roadmap
 
-### Assignments Management
-![Assignments](./screenshots/assignments.png)
+-   Streaming AI responses
+-   PDF page citations
+-   Chat history
+-   Flashcards
+-   AI study planner
+-   Mobile application
 
-### Attendance Management
-![Attendance](./screenshots/attendance.png)
+------------------------------------------------------------------------
 
-### Assignment Workspace
-![Workspace](./screenshots/workspace.png)
-
-### PDF Upload
-![PDF Upload](./screenshots/pdf-upload.png)
-
-### Extracted Questions
-![Extracted Questions](./screenshots/extracted-questions.png)
-
-### AI Generated Answer
-![AI Answer](./screenshots/ai-answer.png)
-
-### AI Evaluation Result
-![AI Evaluation](./screenshots/ai-evaluation.png)
-
-### Practice Test
-![Practice Test](./screenshots/practice-test.png)
-
-### Practice Test Result
-![Practice Test Result](./screenshots/practice-result.png)
-
-### Analytics Dashboard
-![Analytics](./screenshots/analytics.png)
-
-### Swagger API Documentation
-![Swagger](./screenshots/swagger.png)
-
-## Live Demo
-
-Frontend:
-https://campusagent-ai.vercel.app
-
-Backend API:
-https://campusagent-ai-backend.onrender.com
-
-Swagger Documentation:
-https://campusagent-ai-backend.onrender.com/docs
-
-## 📊 Analytics Included
-
-CampusAgent AI includes a dedicated practice test analytics dashboard with:
-
-* Score trend chart
-* Test status pie chart
-* Topic performance bar chart
-* Weak topic frequency chart
-* Pivot-style topic summary table
-* Recent practice tests section
-
----
-
-## 🔐 Security Notes
-
-* Environment variables are protected using `.env`
-* `.env` files are ignored through `.gitignore`
-* JWT authentication is used for protected routes
-* MongoDB Atlas is used for cloud database storage
-* Sensitive API keys are not pushed to GitHub
-
----
-
-## 🚀 Deployment Plan
-
-### Backend Deployment: Render
-
-* Create a new Render Web Service
-* Connect GitHub repository
-* Set root directory as `backend`
-* Add environment variables
-* Use FastAPI start command
-* Deploy backend API
-
-### Frontend Deployment: Vercel
-
-* Import GitHub repository into Vercel
-* Set root directory as `frontend`
-* Add frontend environment variables
-* Connect frontend to deployed backend URL
-* Deploy production frontend
-
----
-
-## 🔮 Future Scope
-
-Planned improvements:
-
-* Full RAG-based PDF question-answering
-* Notes summarization from uploaded PDFs
-* Smart study planner with calendar integration
-* Reminder notifications
-* Subject-wise AI tutor
-* Voice-based academic assistant
-* Student performance prediction
-* Admin/teacher dashboard
-* Multi-user classroom mode
-* Production deployment with CI/CD
-* Better mobile-first UI polish
-
----
-
-## 🧑‍💻 Author
+# 👨‍💻 Author
 
 **Anzar Khan**
-B.Tech Artificial Intelligence & Machine Learning Student
 
-GitHub: [AnzarKhan855](https://github.com/AnzarKhan855)
+B.Tech Artificial Intelligence & Machine Learning
 
----
+GitHub: https://github.com/AnzarKhan855
 
-## ⭐ Why This Project Matters
+LinkedIn: (Add your LinkedIn profile URL)
 
-CampusAgent AI is more than a CRUD project. It combines full-stack engineering with AI-powered academic automation.
+------------------------------------------------------------------------
 
-It demonstrates:
+# ⭐ Why This Project
 
-* Full-stack development
-* Authentication
-* REST API design
-* MongoDB database modeling
-* PDF parsing
-* LLM integration
-* AI evaluation workflow
-* Practice test generation
-* Analytics dashboards
-* Recruiter-focused product thinking
+CampusAgent AI demonstrates:
 
-This makes CampusAgent AI a strong portfolio project for full-stack, AI/ML, and agentic AI internship roles.
+-   Full-stack development
+-   REST API design
+-   Authentication
+-   MongoDB data modeling
+-   Retrieval-Augmented Generation (RAG)
+-   Vector databases
+-   LLM integration
+-   AI-powered academic workflows
+-   Production deployment
+
+It is designed as a recruiter-ready portfolio project showcasing
+practical AI and software engineering skills.
