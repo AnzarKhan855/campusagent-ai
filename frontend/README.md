@@ -426,6 +426,17 @@ http://localhost:3000
 ### Swagger API Documentation
 ![Swagger](./screenshots/swagger.png)
 
+## Live Demo
+
+Frontend:
+https://campusagent-ai.vercel.app
+
+Backend API:
+https://campusagent-ai-backend.onrender.com
+
+Swagger Documentation:
+https://campusagent-ai-backend.onrender.com/docs
+
 ## 📊 Analytics Included
 
 CampusAgent AI includes a dedicated practice test analytics dashboard with:
