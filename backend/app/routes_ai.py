@@ -34,54 +34,113 @@ class AICommandRequest(BaseModel):
 
 
 def get_user_id(current_user: dict) -> str:
-    return str(current_user.get("_id") or current_user.get("id") or current_user.get("email"))
+    return str(
+        current_user.get("_id")
+        or current_user.get("id")
+        or current_user.get("email")
+    )
 
 
 def parse_due_date(value: Any) -> Optional[date]:
     if not value:
         return None
+
     if isinstance(value, datetime):
         return value.date()
+
     if isinstance(value, date):
         return value
+
     if isinstance(value, str):
         try:
             return datetime.fromisoformat(value.replace("Z", "+00:00")).date()
         except ValueError:
             return None
+
     return None
 
 
 def format_due_date(value: Any) -> str:
     if not value:
         return "No due date"
+
     if isinstance(value, datetime):
         return value.date().isoformat()
+
     if isinstance(value, date):
         return value.isoformat()
+
     return str(value)
+
+
+def safe_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def get_classes_held(record: dict) -> int:
+    return safe_int(
+        record.get("total_classes")
+        or record.get("classes_held")
+        or record.get("held_classes")
+        or 0
+    )
+
+
+def get_classes_attended(record: dict) -> int:
+    return safe_int(
+        record.get("attended_classes")
+        or record.get("classes_attended")
+        or record.get("present_classes")
+        or 0
+    )
 
 
 def calculate_attendance_percentage(held: int, attended: int) -> float:
     if held <= 0:
         return 0.0
+
     return round((attended / held) * 100, 2)
 
 
 def get_subject_name(subject_id: Any, subjects_map: dict) -> str:
     if not subject_id:
         return "Unknown Subject"
+
     return subjects_map.get(str(subject_id), "Unknown Subject")
 
 
 def get_assignment_subject(assignment: dict, subjects_map: dict) -> str:
     subject_id = assignment.get("subject_id")
+
     if subject_id:
         subject_name = get_subject_name(subject_id, subjects_map)
+
         if subject_name != "Unknown Subject":
             return subject_name
 
-    return assignment.get("subject") or assignment.get("subject_name") or "Unknown Subject"
+    return (
+        assignment.get("subject")
+        or assignment.get("subject_name")
+        or "Unknown Subject"
+    )
+
+
+def get_attendance_subject(record: dict, subjects_map: dict) -> str:
+    return (
+        record.get("subject_name")
+        or record.get("subject")
+        or get_subject_name(record.get("subject_id"), subjects_map)
+    )
 
 
 def get_assignment_details(assignment: dict) -> str:
@@ -117,7 +176,9 @@ def get_assignment_pdf_text(assignment: dict) -> str:
 async def fetch_student_data(user_id: str):
     subjects = await db.subjects.find({"user_id": user_id}).to_list(length=None)
     assignments = await db.assignments.find({"user_id": user_id}).to_list(length=None)
-    attendance_records = await db.attendance.find({"user_id": user_id}).to_list(length=None)
+    attendance_records = await db.attendance.find({"user_id": user_id}).to_list(
+        length=None
+    )
 
     subjects_map = {
         str(subject.get("_id")): subject.get("name", "Unknown Subject")
@@ -127,7 +188,12 @@ async def fetch_student_data(user_id: str):
     return subjects, assignments, attendance_records, subjects_map
 
 
-def build_rule_based_plan(subjects: list, assignments: list, attendance_records: list, subjects_map: dict):
+def build_rule_based_plan(
+    subjects: list,
+    assignments: list,
+    attendance_records: list,
+    subjects_map: dict,
+):
     today = datetime.now(timezone.utc).date()
 
     pending_assignments = []
@@ -163,20 +229,30 @@ def build_rule_based_plan(subjects: list, assignments: list, attendance_records:
     danger_attendance = []
 
     for record in attendance_records:
-        classes_held = int(record.get("classes_held", 0))
-        classes_attended = int(record.get("classes_attended", 0))
-        required_percentage = float(record.get("required_percentage", 75))
+        classes_held = get_classes_held(record)
+        classes_attended = get_classes_attended(record)
+        required_percentage = safe_float(record.get("required_percentage"), 75)
 
-        percentage = calculate_attendance_percentage(classes_held, classes_attended)
+        percentage = record.get("current_percentage")
+
+        if percentage is None:
+            percentage = calculate_attendance_percentage(
+                classes_held,
+                classes_attended,
+            )
+        else:
+            percentage = safe_float(percentage)
 
         if classes_held > 0 and percentage < required_percentage:
-            danger_attendance.append({
-                "subject": get_subject_name(record.get("subject_id"), subjects_map),
-                "attendance_percentage": percentage,
-                "required_percentage": required_percentage,
-                "classes_held": classes_held,
-                "classes_attended": classes_attended,
-            })
+            danger_attendance.append(
+                {
+                    "subject": get_attendance_subject(record, subjects_map),
+                    "attendance_percentage": percentage,
+                    "required_percentage": required_percentage,
+                    "classes_held": classes_held,
+                    "classes_attended": classes_attended,
+                }
+            )
 
     priority_weight = {"high": 1, "medium": 2, "low": 3}
 
@@ -205,7 +281,9 @@ def build_rule_based_plan(subjects: list, assignments: list, attendance_records:
         )
 
     if overdue_assignments:
-        todays_priority = f"Finish overdue assignment first: {overdue_assignments[0]['title']}"
+        todays_priority = (
+            f"Finish overdue assignment first: {overdue_assignments[0]['title']}"
+        )
     elif urgent_assignments:
         todays_priority = f"Focus on upcoming deadline: {urgent_assignments[0]['title']}"
     elif danger_attendance:
@@ -236,8 +314,15 @@ def build_rule_based_plan(subjects: list, assignments: list, attendance_records:
     }
 
 
-def build_student_context(subjects: list, assignments: list, attendance_records: list, subjects_map: dict) -> str:
-    subject_lines = [f"- {subject.get('name', 'Unknown Subject')}" for subject in subjects]
+def build_student_context(
+    subjects: list,
+    assignments: list,
+    attendance_records: list,
+    subjects_map: dict,
+) -> str:
+    subject_lines = [
+        f"- {subject.get('name', 'Unknown Subject')}" for subject in subjects
+    ]
 
     assignment_lines = []
 
@@ -273,14 +358,23 @@ def build_student_context(subjects: list, assignments: list, attendance_records:
     attendance_lines = []
 
     for record in attendance_records:
-        classes_held = int(record.get("classes_held", 0))
-        classes_attended = int(record.get("classes_attended", 0))
-        required_percentage = float(record.get("required_percentage", 75))
-        percentage = calculate_attendance_percentage(classes_held, classes_attended)
+        classes_held = get_classes_held(record)
+        classes_attended = get_classes_attended(record)
+        required_percentage = safe_float(record.get("required_percentage"), 75)
+
+        percentage = record.get("current_percentage")
+
+        if percentage is None:
+            percentage = calculate_attendance_percentage(
+                classes_held,
+                classes_attended,
+            )
+        else:
+            percentage = safe_float(percentage)
 
         attendance_lines.append(
             "- "
-            f"Subject: {get_subject_name(record.get('subject_id'), subjects_map)}; "
+            f"Subject: {get_attendance_subject(record, subjects_map)}; "
             f"Attendance: {percentage}%; "
             f"Required: {required_percentage}%; "
             f"Attended: {classes_attended}; "
@@ -288,8 +382,14 @@ def build_student_context(subjects: list, assignments: list, attendance_records:
         )
 
     subjects_text = "\n".join(subject_lines) if subject_lines else "No subjects found."
-    assignments_text = "\n".join(assignment_lines) if assignment_lines else "No assignments found."
-    attendance_text = "\n".join(attendance_lines) if attendance_lines else "No attendance records found."
+    assignments_text = (
+        "\n".join(assignment_lines) if assignment_lines else "No assignments found."
+    )
+    attendance_text = (
+        "\n".join(attendance_lines)
+        if attendance_lines
+        else "No attendance records found."
+    )
 
     return f"""
 Student Academic Context
@@ -305,19 +405,36 @@ Attendance:
 """
 
 
-async def run_groq_agent(command: str, subjects: list, assignments: list, attendance_records: list, subjects_map: dict):
+async def run_groq_agent(
+    command: str,
+    subjects: list,
+    assignments: list,
+    attendance_records: list,
+    subjects_map: dict,
+):
     if AsyncGroq is None:
-        raise HTTPException(status_code=500, detail="Groq package is not installed. Run: pip install groq")
+        raise HTTPException(
+            status_code=500,
+            detail="Groq package is not installed. Run: pip install groq",
+        )
 
     api_key = os.getenv("GROQ_API_KEY", "").strip()
 
     if not api_key:
-        raise HTTPException(status_code=500, detail="GROQ_API_KEY is missing in backend environment variables")
+        raise HTTPException(
+            status_code=500,
+            detail="GROQ_API_KEY is missing in backend environment variables",
+        )
 
     model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant").strip()
     client = AsyncGroq(api_key=api_key)
 
-    student_context = build_student_context(subjects, assignments, attendance_records, subjects_map)
+    student_context = build_student_context(
+        subjects,
+        assignments,
+        attendance_records,
+        subjects_map,
+    )
 
     system_prompt = f"""
 You are CampusAgent AI, a helpful academic productivity assistant for B.Tech students.
@@ -345,6 +462,13 @@ PDF rules:
 3. If PDF text is not available, say that no PDF text is available.
 4. Do not pretend to read a PDF if extracted text is missing.
 5. Keep answers concise and practical.
+
+Attendance rules:
+1. Use the Attendance section from Student Academic Context.
+2. Do not say attendance is 0% unless the provided context says 0%.
+3. If attendance is below required percentage, clearly mention the subject and current percentage.
+4. If attendance is above required percentage, say it is currently safe.
+5. Give practical advice based on current attendance.
 
 Student data:
 {student_context}
@@ -381,7 +505,10 @@ Response style:
 
 
 @router.post("/command")
-async def run_ai_command(request: AICommandRequest, current_user: dict = Depends(get_current_user)):
+async def run_ai_command(
+    request: AICommandRequest,
+    current_user: dict = Depends(get_current_user),
+):
     user_id = get_user_id(current_user)
     original_command = request.command.strip()
     command = original_command.lower()
@@ -389,7 +516,9 @@ async def run_ai_command(request: AICommandRequest, current_user: dict = Depends
     if not original_command:
         raise HTTPException(status_code=400, detail="Command is required")
 
-    subjects, assignments, attendance_records, subjects_map = await fetch_student_data(user_id)
+    subjects, assignments, attendance_records, subjects_map = await fetch_student_data(
+        user_id
+    )
 
     plan_commands = [
         "plan my day",
@@ -399,8 +528,21 @@ async def run_ai_command(request: AICommandRequest, current_user: dict = Depends
         "make a plan for today",
     ]
 
-    if command in plan_commands:
-        rule_based_result = build_rule_based_plan(subjects, assignments, attendance_records, subjects_map)
+    attendance_commands = [
+        "check my attendance",
+        "check my attendance risk",
+        "attendance risk",
+        "show attendance",
+        "my attendance",
+    ]
+
+    if command in plan_commands or command in attendance_commands:
+        rule_based_result = build_rule_based_plan(
+            subjects,
+            assignments,
+            attendance_records,
+            subjects_map,
+        )
         return {**rule_based_result, "command": request.command}
 
     return await run_groq_agent(

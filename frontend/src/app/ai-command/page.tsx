@@ -2,6 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  Bot,
+  Brain,
+  CalendarClock,
+  CheckCircle2,
+  ClipboardList,
+  LogOut,
+  MessageSquareText,
+  Sparkles,
+  TriangleAlert,
+} from "lucide-react";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
@@ -155,79 +167,79 @@ export default function AICommandPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#14532d_0,#18181b_28%,#09090b_62%,#000000_100%)] text-white">
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute left-[-120px] top-[-120px] h-80 w-80 rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="absolute right-[-120px] top-40 h-96 w-96 rounded-full bg-violet-600/10 blur-3xl" />
-        <div className="absolute bottom-[-140px] left-1/3 h-96 w-96 rounded-full bg-red-600/10 blur-3xl" />
-      </div>
-
-      <nav className="relative z-10 border-b border-white/10 bg-black/40 px-6 py-4 backdrop-blur-xl">
+    <main className="min-h-screen bg-slate-950 text-white">
+      <nav className="border-b border-slate-800 bg-slate-950 px-6 py-4">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-black tracking-tight">
-              CampusAgent{" "}
-              <span className="bg-gradient-to-r from-emerald-300 via-white to-violet-300 bg-clip-text text-transparent">
-                AI
-              </span>
-            </h1>
-            <p className="text-sm text-zinc-400">
-              AI Command Box · Hybrid Academic Agent
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-800 bg-slate-900">
+              <Bot className="h-6 w-6 text-blue-400" />
+            </div>
+
+            <div>
+              <h1 className="text-xl font-bold tracking-tight">
+                CampusAgent AI
+              </h1>
+              <p className="text-sm text-slate-400">
+                AI command workspace
+              </p>
+            </div>
           </div>
 
           <div className="flex gap-3">
             <button
               onClick={() => router.push("/dashboard")}
-              className="rounded-xl border border-white/10 bg-white/5 px-5 py-2 text-sm font-semibold text-zinc-200 transition hover:bg-white/10"
+              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
             >
+              <ArrowLeft className="h-4 w-4" />
               Dashboard
             </button>
 
             <button
               onClick={handleLogout}
-              className="rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-2 text-sm font-semibold text-red-300 transition hover:border-red-400/60 hover:bg-red-500/20"
+              className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-300 hover:bg-red-500/20"
             >
+              <LogOut className="h-4 w-4" />
               Logout
             </button>
           </div>
         </div>
       </nav>
 
-      <section className="relative z-10 mx-auto max-w-7xl px-6 py-8">
-        <div className="mb-8 rounded-[2rem] border border-white/10 bg-gradient-to-br from-zinc-950/95 via-neutral-950 to-emerald-950/25 p-7 shadow-2xl shadow-black/40">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-emerald-300">
+      <section className="mx-auto max-w-7xl px-6 py-8">
+        <div className="mb-8 rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-400">
             Agent Workspace
           </p>
 
-          <h2 className="mt-3 text-4xl font-black tracking-tight">
+          <h2 className="mt-3 text-4xl font-bold tracking-tight">
             AI Command Box
           </h2>
 
-          <p className="mt-3 max-w-3xl text-zinc-300">
+          <p className="mt-3 max-w-3xl text-slate-400">
             Hi {user?.name || "Student"}, ask CampusAgent AI to plan your day,
-            guide assignment preparation, explain topics, or suggest what to
-            study first.
+            check academic priorities, summarize assignment urgency, or suggest
+            what to study first.
           </p>
         </div>
 
-        <div className="rounded-[2rem] border border-white/10 bg-zinc-950/75 p-6 shadow-2xl shadow-black/40">
+        <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.25em] text-emerald-300">
+              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-400">
                 Run Agent
               </p>
 
-              <h3 className="mt-2 text-2xl font-black">Command Input</h3>
+              <h3 className="mt-2 text-2xl font-bold">Command Input</h3>
 
-              <p className="mt-2 max-w-3xl text-zinc-400">
-                Try “Plan my day” for structured planning, or ask assignment
-                help like “How should I complete my Data Analytics assignment?”
+              <p className="mt-2 max-w-3xl text-slate-400">
+                Try “Plan my day”, “Which assignment should I complete first?”,
+                or “Check my attendance risk.”
               </p>
             </div>
 
-            <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-200">
-              Rule-Based + Groq LLM
+            <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-semibold text-slate-300">
+              <Brain className="h-4 w-4 text-blue-400" />
+              Rule-Based + Groq
             </div>
           </div>
 
@@ -236,14 +248,15 @@ export default function AICommandPage() {
               value={aiCommand}
               onChange={(event) => setAiCommand(event.target.value)}
               placeholder="Ask anything academic..."
-              className="flex-1 rounded-2xl border border-white/10 bg-black/40 px-5 py-4 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-400/60 focus:bg-black/60"
+              className="flex-1 rounded-2xl border border-slate-700 bg-slate-950 px-5 py-4 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-500"
             />
 
             <button
               onClick={handleRunAIAgent}
               disabled={aiLoading}
-              className="rounded-2xl bg-emerald-400 px-6 py-4 text-sm font-black text-zinc-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
+              <Sparkles className="h-4 w-4" />
               {aiLoading ? "Running Agent..." : "Run AI Agent"}
             </button>
           </div>
@@ -284,23 +297,24 @@ export default function AICommandPage() {
           )}
 
           {aiResult?.answer && (
-            <div className="mt-7 rounded-2xl border border-emerald-400/20 bg-black/30 p-6">
+            <div className="mt-7 rounded-2xl border border-slate-800 bg-slate-950 p-6">
               <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-300">
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
                     AI Response
                   </p>
-                  <p className="mt-1 text-sm text-zinc-500">
+                  <p className="mt-1 text-sm text-slate-500">
                     Agent Type: {aiResult.agent_type}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-semibold text-emerald-200">
+                <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300">
+                  <MessageSquareText className="h-4 w-4 text-blue-400" />
                   Groq LLM
                 </div>
               </div>
 
-              <div className="mt-6 space-y-3 text-sm leading-7 text-zinc-200">
+              <div className="mt-6 space-y-3 text-sm leading-7 text-slate-300">
                 {renderAIAnswer(aiResult.answer)}
               </div>
             </div>
@@ -308,19 +322,20 @@ export default function AICommandPage() {
 
           {aiResult?.plan && aiResult?.summary && (
             <div className="mt-7 space-y-5">
-              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-300">
+              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">
                   Today&apos;s Priority
                 </p>
 
-                <p className="mt-3 text-xl font-black text-white">
+                <p className="mt-3 text-xl font-bold text-white">
                   {aiResult.plan.todays_priority}
                 </p>
               </div>
 
               <div className="grid gap-5 lg:grid-cols-2">
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
-                  <h4 className="text-lg font-black text-emerald-300">
+                <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+                  <h4 className="flex items-center gap-2 text-lg font-bold text-white">
+                    <ClipboardList className="h-5 w-5 text-blue-400" />
                     Urgent Assignments
                   </h4>
 
@@ -330,20 +345,20 @@ export default function AICommandPage() {
                         (assignment, index) => (
                           <div
                             key={`${assignment.title}-${index}`}
-                            className="rounded-xl border border-emerald-400/15 bg-emerald-500/10 p-4"
+                            className="rounded-xl border border-slate-800 bg-slate-900 p-4"
                           >
                             <p className="font-bold text-white">
                               {assignment.title}
                             </p>
 
-                            <p className="mt-1 text-sm text-zinc-300">
-                              {assignment.subject} • Due:{" "}
+                            <p className="mt-1 text-sm text-slate-400">
+                              {assignment.subject} · Due:{" "}
                               {assignment.due_date}
                             </p>
 
-                            <p className="mt-2 text-xs font-semibold capitalize text-emerald-300">
-                              {assignment.days_left ?? "No"} days left •{" "}
-                              {assignment.priority} priority •{" "}
+                            <p className="mt-2 text-xs font-semibold capitalize text-blue-400">
+                              {assignment.days_left ?? "No"} days left ·{" "}
+                              {assignment.priority} priority ·{" "}
                               {assignment.status}
                             </p>
                           </div>
@@ -351,14 +366,15 @@ export default function AICommandPage() {
                       )}
                     </div>
                   ) : (
-                    <p className="mt-4 text-sm text-zinc-400">
+                    <p className="mt-4 text-sm text-slate-400">
                       No urgent assignments right now.
                     </p>
                   )}
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
-                  <h4 className="text-lg font-black text-red-400">
+                <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+                  <h4 className="flex items-center gap-2 text-lg font-bold text-white">
+                    <TriangleAlert className="h-5 w-5 text-red-400" />
                     Overdue Assignments
                   </h4>
 
@@ -368,14 +384,14 @@ export default function AICommandPage() {
                         (assignment, index) => (
                           <div
                             key={`${assignment.title}-${index}`}
-                            className="rounded-xl border border-red-500/25 bg-red-500/10 p-4"
+                            className="rounded-xl border border-red-500/30 bg-red-500/10 p-4"
                           >
                             <p className="font-bold text-white">
                               {assignment.title}
                             </p>
 
                             <p className="mt-1 text-sm text-red-200">
-                              {assignment.subject} • Due:{" "}
+                              {assignment.subject} · Due:{" "}
                               {assignment.due_date}
                             </p>
                           </div>
@@ -383,16 +399,17 @@ export default function AICommandPage() {
                       )}
                     </div>
                   ) : (
-                    <p className="mt-4 text-sm text-zinc-400">
-                      No overdue assignments. Nice.
+                    <p className="mt-4 text-sm text-slate-400">
+                      No overdue assignments.
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-red-500/20 bg-black/30 p-5">
-                <h4 className="text-lg font-black text-red-400">
-                  Attendance Danger Warning
+              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+                <h4 className="flex items-center gap-2 text-lg font-bold text-white">
+                  <CalendarClock className="h-5 w-5 text-blue-400" />
+                  Attendance Risk
                 </h4>
 
                 {aiResult.plan.attendance_danger_warning.length > 0 ? (
@@ -401,7 +418,7 @@ export default function AICommandPage() {
                       (warning, index) => (
                         <div
                           key={index}
-                          className="rounded-xl border border-red-500/25 bg-red-500/10 p-4 text-sm text-red-200"
+                          className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200"
                         >
                           {formatWarning(warning)}
                         </div>
@@ -409,32 +426,32 @@ export default function AICommandPage() {
                     )}
                   </div>
                 ) : (
-                  <p className="mt-4 text-sm text-zinc-400">
-                    No attendance danger warning right now.
+                  <p className="mt-4 text-sm text-slate-400">
+                    No attendance risk warnings right now.
                   </p>
                 )}
               </div>
 
-              <div className="rounded-2xl border border-violet-400/20 bg-black/30 p-5">
-                <h4 className="text-lg font-black text-violet-300">
+              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+                <h4 className="text-lg font-bold text-white">
                   Suggested Study Order
                 </h4>
 
                 {aiResult.plan.suggested_study_order.length > 0 ? (
-                  <ol className="mt-4 list-decimal space-y-3 pl-5 text-sm text-zinc-300">
+                  <ol className="mt-4 list-decimal space-y-3 pl-5 text-sm text-slate-300">
                     {aiResult.plan.suggested_study_order.map((task, index) => (
                       <li key={index}>{task}</li>
                     ))}
                   </ol>
                 ) : (
-                  <p className="mt-4 text-sm text-zinc-400">
+                  <p className="mt-4 text-sm text-slate-400">
                     No study order generated.
                   </p>
                 )}
               </div>
 
-              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-5">
-                <p className="text-sm font-semibold text-emerald-200">
+              <div className="rounded-2xl border border-blue-500/30 bg-blue-500/10 p-5">
+                <p className="text-sm font-semibold text-blue-200">
                   {aiResult.plan.short_motivation}
                 </p>
               </div>
@@ -443,31 +460,26 @@ export default function AICommandPage() {
                 <MiniStat
                   label="Subjects"
                   value={aiResult.summary.total_subjects}
-                  accent="text-white"
                 />
 
                 <MiniStat
                   label="Pending"
                   value={aiResult.summary.pending_assignments}
-                  accent="text-violet-300"
                 />
 
                 <MiniStat
                   label="Urgent"
                   value={aiResult.summary.urgent_assignments}
-                  accent="text-emerald-300"
                 />
 
                 <MiniStat
                   label="Overdue"
                   value={aiResult.summary.overdue_assignments}
-                  accent="text-red-400"
                 />
 
                 <MiniStat
                   label="Danger Attendance"
                   value={aiResult.summary.danger_attendance_subjects}
-                  accent="text-red-400"
                 />
               </div>
             </div>
@@ -487,30 +499,23 @@ function PromptButton({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:border-emerald-400/40 hover:bg-emerald-400/10 hover:text-emerald-200"
+      className="rounded-full border border-slate-700 bg-slate-950 px-4 py-2 text-xs font-semibold text-slate-300 transition hover:border-blue-500/50 hover:bg-blue-500/10 hover:text-blue-300"
     >
       {label}
     </button>
   );
 }
 
-function MiniStat({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string | number;
-  accent: string;
-}) {
+function MiniStat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">
+    <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
         {label}
       </p>
 
-      <p className={`mt-3 text-3xl font-black ${accent}`}>{value}</p>
+      <p className="mt-3 text-3xl font-bold text-white">{value}</p>
     </div>
   );
 }
@@ -527,7 +532,7 @@ function renderAIAnswer(answer: string) {
 
     if (trimmedLine.startsWith("**") && trimmedLine.endsWith("**")) {
       return (
-        <h4 key={index} className="pt-3 text-lg font-black text-white">
+        <h4 key={index} className="pt-3 text-lg font-bold text-white">
           {cleanLine}
         </h4>
       );
@@ -539,7 +544,7 @@ function renderAIAnswer(answer: string) {
       trimmedLine.startsWith("+ ")
     ) {
       return (
-        <p key={index} className="pl-4 text-zinc-300">
+        <p key={index} className="pl-4 text-slate-300">
           • {cleanLine.slice(2)}
         </p>
       );
@@ -551,14 +556,14 @@ function renderAIAnswer(answer: string) {
       trimmedLine.startsWith("-")
     ) {
       return (
-        <p key={index} className="pl-4 text-zinc-300">
+        <p key={index} className="pl-4 text-slate-300">
           {cleanLine}
         </p>
       );
     }
 
     return (
-      <p key={index} className="text-zinc-300">
+      <p key={index} className="text-slate-300">
         {cleanLine}
       </p>
     );

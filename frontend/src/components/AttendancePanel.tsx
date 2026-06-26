@@ -10,6 +10,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  Activity,
+  AlertTriangle,
+  CalendarCheck,
+  CheckCircle2,
+  Clock,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 
 type Subject = {
   id: string;
@@ -89,11 +99,11 @@ export default function AttendancePanel() {
         setSubjectId(userSubjects[0].id);
       }
     } catch (error) {
-      if (error instanceof Error) {
-        setMessage(error.message);
-      } else {
-        setMessage("Something went wrong while fetching subjects.");
-      }
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while fetching subjects."
+      );
     }
   }
 
@@ -120,11 +130,11 @@ export default function AttendancePanel() {
 
       setAttendanceRecords(data.attendance || []);
     } catch (error) {
-      if (error instanceof Error) {
-        setMessage(error.message);
-      } else {
-        setMessage("Something went wrong while fetching attendance.");
-      }
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while fetching attendance."
+      );
     }
   }
 
@@ -205,14 +215,13 @@ export default function AttendancePanel() {
       setTotalClasses("");
       setAttendedClasses("");
       setRequiredPercentage("75");
-
       setMessage("Attendance added successfully.");
     } catch (error) {
-      if (error instanceof Error) {
-        setMessage(error.message);
-      } else {
-        setMessage("Something went wrong while adding attendance.");
-      }
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while adding attendance."
+      );
     } finally {
       setLoading(false);
     }
@@ -257,11 +266,11 @@ export default function AttendancePanel() {
 
       setMessage("Attendance updated successfully.");
     } catch (error) {
-      if (error instanceof Error) {
-        setMessage(error.message);
-      } else {
-        setMessage("Something went wrong while updating attendance.");
-      }
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while updating attendance."
+      );
     }
   }
 
@@ -337,6 +346,9 @@ export default function AttendancePanel() {
       return;
     }
 
+    const confirmed = confirm("Delete this attendance record?");
+    if (!confirmed) return;
+
     try {
       const res = await fetch(`${API_BASE_URL}/api/attendance/${attendanceId}`, {
         method: "DELETE",
@@ -361,11 +373,11 @@ export default function AttendancePanel() {
 
       setMessage("Attendance deleted successfully.");
     } catch (error) {
-      if (error instanceof Error) {
-        setMessage(error.message);
-      } else {
-        setMessage("Something went wrong while deleting attendance.");
-      }
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while deleting attendance."
+      );
     }
   }
 
@@ -403,42 +415,43 @@ export default function AttendancePanel() {
 
   function getRiskClass(risk: string) {
     if (risk === "safe") {
-      return "border-emerald-400/30 bg-emerald-500/10 text-emerald-300";
+      return "border-emerald-500/30 bg-emerald-500/10 text-emerald-300";
     }
 
     if (risk === "warning") {
-      return "border-amber-400/30 bg-amber-500/10 text-amber-300";
+      return "border-amber-500/30 bg-amber-500/10 text-amber-300";
     }
 
-    return "border-red-500/40 bg-red-500/10 text-red-300";
+    return "border-red-500/30 bg-red-500/10 text-red-300";
   }
 
   function getProgressColor(risk: string) {
-    if (risk === "safe") return "bg-emerald-400";
-    if (risk === "warning") return "bg-amber-400";
+    if (risk === "safe") return "bg-emerald-500";
+    if (risk === "warning") return "bg-amber-500";
     return "bg-red-500";
   }
 
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-slate-950/75 p-6 text-white shadow-2xl shadow-black/40 backdrop-blur-xl">
-      <div className="mb-7 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+    <section className="rounded-3xl border border-slate-800 bg-slate-900 p-6 text-white shadow-xl">
+      <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-emerald-300">
-            Attendance Manager
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-400">
+            Attendance
           </p>
 
-          <h2 className="mt-2 text-3xl font-black tracking-tight">
-            Track Attendance Risk
+          <h2 className="mt-2 text-3xl font-bold tracking-tight">
+            Attendance Risk Overview
           </h2>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-            Add subject-wise attendance. If college is closed or class does not
-            happen, do not update anything.
+            Track subject-wise attendance and understand how many classes you
+            can miss or need to attend.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200">
-          {dangerSubjects} Danger Subjects
+        <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-semibold text-slate-300">
+          <AlertTriangle className="h-4 w-4 text-red-400" />
+          {dangerSubjects} Risk Subjects
         </div>
       </div>
 
@@ -446,16 +459,17 @@ export default function AttendancePanel() {
         <div
           className={`mb-5 rounded-xl border px-4 py-3 text-sm ${
             message.toLowerCase().includes("success")
-              ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
-              : "border-red-400/20 bg-red-500/10 text-red-200"
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+              : "border-red-500/30 bg-red-500/10 text-red-300"
           }`}
         >
           {message}
         </div>
       )}
 
-      <div className="mb-6 grid gap-4 md:grid-cols-4">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
+          icon={<Activity className="h-5 w-5" />}
           title="Overall Attendance"
           value={`${overallPercentage}%`}
           description={overallRisk}
@@ -469,20 +483,23 @@ export default function AttendancePanel() {
         />
 
         <SummaryCard
+          icon={<CheckCircle2 className="h-5 w-5" />}
           title="Total Attended"
           value={totalAttendedOverall}
           description="Across all subjects"
-          valueClass="text-emerald-300"
+          valueClass="text-white"
         />
 
         <SummaryCard
+          icon={<CalendarCheck className="h-5 w-5" />}
           title="Classes Held"
           value={totalHeldOverall}
           description="Only when class happens"
-          valueClass="text-indigo-300"
+          valueClass="text-white"
         />
 
         <SummaryCard
+          icon={<AlertTriangle className="h-5 w-5" />}
           title="Danger Subjects"
           value={dangerSubjects}
           description="Below required attendance"
@@ -491,9 +508,9 @@ export default function AttendancePanel() {
       </div>
 
       {attendanceRecords.length > 0 && (
-        <div className="mb-6 rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-5 shadow-xl">
+        <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-950 p-5">
           <div className="mb-4">
-            <h3 className="text-lg font-black text-white">
+            <h3 className="text-lg font-bold text-white">
               Subject-wise Attendance Graph
             </h3>
             <p className="mt-1 text-sm text-slate-400">
@@ -504,22 +521,26 @@ export default function AttendancePanel() {
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={attendanceChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                 <XAxis dataKey="subject" stroke="#94a3b8" />
                 <YAxis stroke="#94a3b8" domain={[0, 100]} />
                 <Tooltip
+                  cursor={{ fill: "rgba(37, 99, 235, 0.08)" }}
                   contentStyle={{
                     backgroundColor: "#020617",
-                    border: "1px solid rgba(255,255,255,0.12)",
+                    border: "1px solid #1e293b",
                     borderRadius: "12px",
                     color: "#ffffff",
                   }}
+                  labelStyle={{ color: "#ffffff" }}
+                  itemStyle={{ color: "#93c5fd" }}
                 />
                 <Bar
                   dataKey="percentage"
                   name="Attendance %"
-                  fill="#6366f1"
-                  radius={[10, 10, 0, 0]}
+                  fill="#2563eb"
+                  radius={[8, 8, 0, 0]}
+                  activeBar={false}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -529,17 +550,20 @@ export default function AttendancePanel() {
 
       <form
         onSubmit={handleAddAttendance}
-        className="grid gap-4 rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-5 shadow-xl md:grid-cols-2"
+        className="grid gap-4 rounded-2xl border border-slate-800 bg-slate-950 p-5 md:grid-cols-2"
       >
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-200">
-            Subject
-          </label>
+        <div className="md:col-span-2">
+          <h3 className="text-lg font-bold text-white">Add Attendance Record</h3>
+          <p className="mt-1 text-sm text-slate-400">
+            Add initial subject-wise attendance. Use edit later for corrections.
+          </p>
+        </div>
 
+        <InputGroup label="Subject">
           <select
             value={subjectId}
             onChange={(e) => setSubjectId(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none transition focus:border-indigo-400/60 focus:ring-2 focus:ring-indigo-500/20"
+            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
           >
             {subjects.length === 0 ? (
               <option value="">No subjects found</option>
@@ -551,66 +575,53 @@ export default function AttendancePanel() {
               ))
             )}
           </select>
-        </div>
+        </InputGroup>
 
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-200">
-            Required Percentage
-          </label>
-
+        <InputGroup label="Required Percentage">
           <input
             type="number"
             placeholder="75"
             value={requiredPercentage}
             onChange={(e) => setRequiredPercentage(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none placeholder:text-slate-500 transition focus:border-indigo-400/60 focus:ring-2 focus:ring-indigo-500/20"
+            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-blue-500"
           />
-        </div>
+        </InputGroup>
 
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-200">
-            Classes Held So Far
-          </label>
-
+        <InputGroup label="Classes Held So Far">
           <input
             type="number"
-            placeholder="Example: 20 classes happened till now"
+            placeholder="Example: 20"
             value={totalClasses}
             onChange={(e) => setTotalClasses(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none placeholder:text-slate-500 transition focus:border-indigo-400/60 focus:ring-2 focus:ring-indigo-500/20"
+            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-blue-500"
           />
-        </div>
+        </InputGroup>
 
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-200">
-            Classes You Attended
-          </label>
-
+        <InputGroup label="Classes You Attended">
           <input
             type="number"
             placeholder="Example: 16"
             value={attendedClasses}
             onChange={(e) => setAttendedClasses(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none placeholder:text-slate-500 transition focus:border-indigo-400/60 focus:ring-2 focus:ring-indigo-500/20"
+            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-blue-500"
           />
-        </div>
+        </InputGroup>
 
         <button
           type="submit"
           disabled={loading || subjects.length === 0}
-          className="rounded-xl bg-gradient-to-r from-indigo-500 to-emerald-500 px-5 py-3 font-bold text-white shadow-lg shadow-indigo-950/30 transition hover:scale-[1.01] hover:shadow-emerald-950/30 disabled:cursor-not-allowed disabled:opacity-60 md:col-span-2"
+          className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 md:col-span-2"
         >
+          <Plus className="h-4 w-4" />
           {loading ? "Adding..." : "Add Attendance"}
         </button>
       </form>
 
       <div className="mt-7">
-        <h3 className="mb-4 text-xl font-black text-white">
-          Your Attendance
-        </h3>
+        <h3 className="mb-4 text-xl font-bold text-white">Your Attendance</h3>
 
         {attendanceRecords.length === 0 ? (
-          <div className="rounded-[1.5rem] border border-dashed border-white/15 bg-slate-900/50 p-8 text-center text-slate-400">
+          <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950 p-8 text-center text-slate-400">
             No attendance records added yet.
           </div>
         ) : (
@@ -618,16 +629,16 @@ export default function AttendancePanel() {
             {attendanceRecords.map((record) => (
               <div
                 key={record.id}
-                className="rounded-[1.5rem] border border-white/10 bg-slate-900/75 p-5 shadow-lg shadow-black/25 transition duration-300 hover:-translate-y-1 hover:bg-slate-900"
+                className="rounded-2xl border border-slate-800 bg-slate-950 p-5 transition hover:border-blue-500/40"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h4 className="text-lg font-black text-white">
+                    <h4 className="text-lg font-bold text-white">
                       {record.subject_name}
                     </h4>
                     <p className="mt-1 text-sm text-slate-400">
                       {record.attended_classes} attended /{" "}
-                      {record.total_classes} held so far
+                      {record.total_classes} held
                     </p>
                   </div>
 
@@ -648,7 +659,7 @@ export default function AttendancePanel() {
                     </span>
                   </div>
 
-                  <div className="mt-2 h-3 overflow-hidden rounded-full bg-slate-800">
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-800">
                     <div
                       className={`h-full rounded-full ${getProgressColor(
                         record.risk_status
@@ -661,23 +672,23 @@ export default function AttendancePanel() {
                 </div>
 
                 <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3">
+                  <div className="rounded-xl border border-slate-800 bg-slate-900 p-3">
                     <p className="text-slate-400">Can Miss</p>
-                    <p className="mt-1 text-xl font-black text-emerald-300">
+                    <p className="mt-1 text-xl font-bold text-white">
                       {record.classes_can_miss}
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-red-400/20 bg-red-500/10 p-3">
+                  <div className="rounded-xl border border-slate-800 bg-slate-900 p-3">
                     <p className="text-slate-400">Need Attend</p>
-                    <p className="mt-1 text-xl font-black text-red-300">
+                    <p className="mt-1 text-xl font-bold text-white">
                       {record.classes_needed ?? 0}
                     </p>
                   </div>
                 </div>
 
                 {editingId === record.id ? (
-                  <div className="mt-5 rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+                  <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-900 p-4">
                     <div className="grid gap-3 md:grid-cols-3">
                       <EditInput
                         label="Classes Held"
@@ -702,15 +713,15 @@ export default function AttendancePanel() {
                       <button
                         type="button"
                         onClick={() => handleSaveEdit(record)}
-                        className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+                        className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
                       >
-                        Save
+                        Save Changes
                       </button>
 
                       <button
                         type="button"
                         onClick={cancelEditing}
-                        className="rounded-xl border border-white/10 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/5"
+                        className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-slate-800"
                       >
                         Cancel
                       </button>
@@ -721,32 +732,36 @@ export default function AttendancePanel() {
                     <button
                       type="button"
                       onClick={() => handleAttended(record)}
-                      className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+                      className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-slate-800"
                     >
-                      + Attended
+                      <CheckCircle2 className="h-4 w-4" />
+                      Mark Attended
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleMissed(record)}
-                      className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500"
+                      className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-slate-800"
                     >
-                      + Missed
+                      <Clock className="h-4 w-4" />
+                      Mark Missed
                     </button>
 
                     <button
                       type="button"
                       onClick={() => startEditing(record)}
-                      className="rounded-xl border border-indigo-400/40 px-4 py-2 text-sm font-semibold text-indigo-300 transition hover:bg-indigo-500/10"
+                      className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-slate-800"
                     >
+                      <Pencil className="h-4 w-4" />
                       Edit
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleDeleteAttendance(record.id)}
-                      className="rounded-xl border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-400 transition hover:bg-red-500/10"
+                      className="flex items-center gap-2 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500/20"
                     >
+                      <Trash2 className="h-4 w-4" />
                       Delete
                     </button>
                   </div>
@@ -761,21 +776,44 @@ export default function AttendancePanel() {
 }
 
 function SummaryCard({
+  icon,
   title,
   value,
   description,
   valueClass,
 }: {
+  icon: React.ReactNode;
   title: string;
   value: string | number;
   description: string;
   valueClass: string;
 }) {
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-5 shadow-lg shadow-black/25">
-      <p className="text-sm text-slate-400">{title}</p>
-      <h3 className={`mt-2 text-4xl font-black ${valueClass}`}>{value}</h3>
+    <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-blue-400">
+        {icon}
+      </div>
+
+      <p className="mt-4 text-sm text-slate-400">{title}</p>
+      <h3 className={`mt-2 text-4xl font-bold ${valueClass}`}>{value}</h3>
       <p className="mt-2 text-sm capitalize text-slate-500">{description}</p>
+    </div>
+  );
+}
+
+function InputGroup({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-semibold text-slate-300">
+        {label}
+      </label>
+      {children}
     </div>
   );
 }
@@ -799,7 +837,7 @@ function EditInput({
         type="number"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-white outline-none transition focus:border-indigo-400/60"
+        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none transition focus:border-blue-500"
       />
     </div>
   );

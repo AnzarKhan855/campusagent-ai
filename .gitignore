@@ -17,3 +17,17 @@ frontend/out/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local RAG / Qdrant data
+backend/qdrant_storage/
+backend/qdrant_data/
+backend/uploaded_rag_pdfs/
+backend/uploads/
+backend/**/*.lock
+
+# Python cache
+backend/__pycache__/
+backend/**/__pycache__/
+
+# Next build
+frontend/.next/

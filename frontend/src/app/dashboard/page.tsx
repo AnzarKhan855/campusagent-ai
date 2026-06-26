@@ -3,6 +3,20 @@
 import PracticeTestAnalytics from "@/components/PracticeTestAnalytics";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  BookOpen,
+  ClipboardList,
+  CalendarCheck,
+  Brain,
+  FileText,
+  Library,
+  LogOut,
+  GraduationCap,
+  AlertTriangle,
+  CheckCircle2,
+  BarChart3,
+  ArrowRight,
+} from "lucide-react";
 
 type User = {
   id?: string;
@@ -97,201 +111,211 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#14532d_0,#18181b_28%,#09090b_62%,#000000_100%)] text-white">
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute left-[-120px] top-[-120px] h-80 w-80 rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="absolute right-[-120px] top-40 h-96 w-96 rounded-full bg-violet-600/10 blur-3xl" />
-        <div className="absolute bottom-[-140px] left-1/3 h-96 w-96 rounded-full bg-red-600/10 blur-3xl" />
-      </div>
-
-      <nav className="relative z-10 border-b border-white/10 bg-black/40 px-6 py-4 backdrop-blur-xl">
+    <main className="min-h-screen bg-slate-950 text-white">
+      <nav className="border-b border-slate-800 bg-slate-950/95 px-6 py-4">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-black tracking-tight">
-              CampusAgent{" "}
-              <span className="bg-gradient-to-r from-emerald-300 via-white to-violet-300 bg-clip-text text-transparent">
-                AI
-              </span>
-            </h1>
-            <p className="text-sm text-zinc-400">
-              Agentic student productivity dashboard
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-800 bg-slate-900">
+              <GraduationCap className="h-6 w-6 text-blue-400" />
+            </div>
+
+            <div>
+              <h1 className="text-xl font-bold tracking-tight">
+                CampusAgent AI
+              </h1>
+              <p className="text-sm text-slate-400">
+                Student productivity and AI study platform
+              </p>
+            </div>
           </div>
 
           <button
             onClick={handleLogout}
-            className="rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-2 text-sm font-semibold text-red-300 transition hover:border-red-400/60 hover:bg-red-500/20"
+            className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-300 hover:bg-red-500/20"
           >
+            <LogOut className="h-4 w-4" />
             Logout
           </button>
         </div>
       </nav>
 
-      <section className="relative z-10 mx-auto max-w-7xl px-6 py-8">
-        <div className="mb-8 rounded-[2rem] border border-white/10 bg-gradient-to-br from-zinc-950/95 via-neutral-950 to-emerald-950/25 p-7 shadow-2xl shadow-black/40">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-emerald-300">
-            Welcome Back
+      <section className="mx-auto max-w-7xl px-6 py-8">
+        <div className="mb-8 rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-400">
+            Dashboard
           </p>
 
-          <h2 className="mt-3 text-4xl font-black tracking-tight">
-            {user?.name || "Student"} 👋
+          <h2 className="mt-3 text-4xl font-bold tracking-tight">
+            Welcome back, {user?.name || "Student"}
           </h2>
 
-          <p className="mt-3 max-w-2xl text-zinc-300">
-            Track subjects, assignments, attendance risks, AI planning, practice
-            tests, weak topics, and upcoming academic workload from one focused
-            student productivity dashboard.
+          <p className="mt-3 max-w-3xl text-slate-400">
+            Manage subjects, assignments, attendance, AI planning, practice
+            tests, weak topics, and RAG-powered PDF study workflows from one
+            clean academic workspace.
           </p>
         </div>
 
         {loading && (
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-zinc-300">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-slate-300">
             Loading dashboard overview...
           </div>
         )}
 
         {error && (
-          <div className="rounded-3xl border border-red-500/30 bg-red-500/10 p-6 text-red-300">
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-300">
             {error}
           </div>
         )}
 
         {overview && (
           <>
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
               <StatCard
+                icon={<BookOpen className="h-5 w-5" />}
                 title="Total Subjects"
                 value={overview.total_subjects}
                 description="Subjects you are tracking"
-                accent="text-emerald-300"
-                glow="bg-emerald-500/10"
               />
 
               <StatCard
+                icon={<ClipboardList className="h-5 w-5" />}
                 title="Pending Assignments"
                 value={overview.pending_assignments}
                 description={`${overview.completed_assignments} completed`}
-                accent="text-violet-300"
-                glow="bg-violet-500/10"
               />
 
               <StatCard
+                icon={<CalendarCheck className="h-5 w-5" />}
                 title="Overall Attendance"
                 value={`${overview.overall_attendance}%`}
                 description={`${overview.total_classes_attended || 0}/${
                   overview.total_classes_held || 0
                 } classes attended`}
-                accent="text-white"
-                glow="bg-white/10"
               />
 
               <StatCard
+                icon={<AlertTriangle className="h-5 w-5" />}
                 title="Danger Subjects"
                 value={overview.danger_attendance_count}
                 description="Subjects below required attendance"
-                accent="text-red-400"
-                glow="bg-red-500/15"
               />
             </div>
 
             <div className="mt-8 grid gap-6 lg:grid-cols-3">
-              <div className="rounded-[2rem] border border-white/10 bg-zinc-950/75 p-6 shadow-2xl shadow-black/40 lg:col-span-2">
+              <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl lg:col-span-2">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <p className="text-sm font-bold uppercase tracking-[0.25em] text-emerald-300">
-                      Student OS
+                    <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-400">
+                      Workspace
                     </p>
-                    <h3 className="mt-2 text-2xl font-black text-white">
+                    <h3 className="mt-2 text-2xl font-bold">
                       Academic Modules
                     </h3>
-                    <p className="mt-2 text-sm text-zinc-400">
-                      Open any module to manage your academic workflow.
+                    <p className="mt-2 text-sm text-slate-400">
+                      Open a module to manage your academic workflow.
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-200">
-                    4 Active Modules
+                  <div className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-200">
+                    6 Active Modules
                   </div>
                 </div>
 
-                <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                <div className="mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                   <ModuleButton
-                    icon="📚"
+                    icon={<BookOpen className="h-6 w-6" />}
                     title="Subjects"
-                    description="Manage subjects, codes, teachers and colors."
-                    accent="emerald"
+                    description="Manage subjects, codes, teachers, and academic details."
                     onClick={() => router.push("/subjects")}
                   />
 
                   <ModuleButton
-                    icon="📝"
+                    icon={<ClipboardList className="h-6 w-6" />}
                     title="Assignments"
-                    description="Track deadlines, priorities and completion status."
-                    accent="violet"
+                    description="Track deadlines, priorities, and completion status."
                     onClick={() => router.push("/assignments")}
                   />
 
                   <ModuleButton
-                    icon="📊"
+                    icon={<CalendarCheck className="h-6 w-6" />}
                     title="Attendance"
-                    description="Monitor risk, danger subjects and classes needed."
-                    accent="red"
+                    description="Monitor attendance risk and required classes."
                     onClick={() => router.push("/attendance")}
                   />
 
                   <ModuleButton
-                    icon="🤖"
+                    icon={<Brain className="h-6 w-6" />}
                     title="AI Agent"
-                    description="Plan your day using assignments and attendance data."
-                    accent="emerald"
+                    description="Plan your day using assignment and attendance data."
                     onClick={() => router.push("/ai-command")}
+                  />
+
+                  <ModuleButton
+                    icon={<FileText className="h-6 w-6" />}
+                    title="AI PDF RAG Chat"
+                    description="Upload PDFs and ask questions across study material."
+                    onClick={() => router.push("/rag-chat")}
+                  />
+
+                  <ModuleButton
+                    icon={<Library className="h-6 w-6" />}
+                    title="PDF Library"
+                    description="View, rename, delete, and chat with uploaded PDFs."
+                    onClick={() => router.push("/pdf-library")}
                   />
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-white/10 bg-zinc-950/75 p-6 shadow-2xl shadow-black/40">
-                <p className="text-sm font-bold uppercase tracking-[0.25em] text-violet-300">
+              <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-400">
                   Deadline Radar
                 </p>
-                <h3 className="mt-2 text-2xl font-black">
-                  Upcoming Deadline
-                </h3>
-                <p className="mt-2 text-sm text-zinc-400">
+
+                <h3 className="mt-2 text-2xl font-bold">Upcoming Deadline</h3>
+
+                <p className="mt-2 text-sm text-slate-400">
                   Nearest pending assignment
                 </p>
 
                 <div className="mt-6">
                   {overview.upcoming_assignments.length > 0 ? (
-                    <div className="rounded-2xl border border-violet-400/20 bg-violet-500/10 p-5">
-                      <p className="text-xl font-black text-violet-100">
+                    <div className="rounded-2xl border border-slate-700 bg-slate-800 p-5">
+                      <p className="text-xl font-bold text-white">
                         {overview.upcoming_assignments[0].title}
                       </p>
 
-                      <p className="mt-3 text-sm text-zinc-300">
+                      <p className="mt-3 text-sm text-slate-300">
                         Due date: {overview.upcoming_assignments[0].due_date}
                       </p>
 
-                      <p className="mt-1 text-sm capitalize text-zinc-400">
+                      <p className="mt-1 text-sm capitalize text-slate-400">
                         Priority: {overview.upcoming_assignments[0].priority}
                       </p>
 
                       <button
                         onClick={() => router.push("/assignments")}
-                        className="mt-5 rounded-xl border border-violet-400/20 bg-violet-500/10 px-4 py-2 text-sm font-semibold text-violet-100 transition hover:bg-violet-500/20"
+                        className="mt-5 flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
                       >
-                        Open Assignments →
+                        Open Assignments
+                        <ArrowRight className="h-4 w-4" />
                       </button>
                     </div>
                   ) : (
-                    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-5 text-emerald-200">
-                      No upcoming pending assignments 🎉
+                    <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-emerald-300">
+                      <div className="flex items-center gap-2 font-semibold">
+                        <CheckCircle2 className="h-5 w-5" />
+                        No upcoming pending assignments
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
-            <PracticeTestAnalytics />
+            <div className="mt-8">
+              <PracticeTestAnalytics />
+            </div>
           </>
         )}
       </section>
@@ -300,29 +324,27 @@ export default function DashboardPage() {
 }
 
 function StatCard({
+  icon,
   title,
   value,
   description,
-  accent,
-  glow,
 }: {
+  icon: React.ReactNode;
   title: string;
   value: string | number;
   description: string;
-  accent: string;
-  glow: string;
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-zinc-950/70 p-6 shadow-xl shadow-black/35 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-zinc-900/70">
-      <div
-        className={`absolute -right-10 -top-10 h-28 w-28 rounded-full ${glow} blur-2xl transition group-hover:scale-125`}
-      />
-
-      <div className="relative z-10">
-        <p className="text-sm text-zinc-400">{title}</p>
-        <h3 className={`mt-3 text-4xl font-black ${accent}`}>{value}</h3>
-        <p className="mt-3 text-sm text-zinc-500">{description}</p>
+    <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-blue-400">
+        {icon}
       </div>
+
+      <p className="mt-5 text-sm text-slate-400">{title}</p>
+
+      <h3 className="mt-2 text-4xl font-bold text-white">{value}</h3>
+
+      <p className="mt-3 text-sm text-slate-500">{description}</p>
     </div>
   );
 }
@@ -331,61 +353,31 @@ function ModuleButton({
   icon,
   title,
   description,
-  accent,
   onClick,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   description: string;
-  accent: "emerald" | "violet" | "red";
   onClick: () => void;
 }) {
-  const styles = {
-    emerald: {
-      border: "hover:border-emerald-400/50",
-      text: "text-emerald-300",
-      bg: "group-hover:bg-emerald-500/10",
-      icon: "bg-emerald-500/10",
-    },
-    violet: {
-      border: "hover:border-violet-400/50",
-      text: "text-violet-300",
-      bg: "group-hover:bg-violet-500/10",
-      icon: "bg-violet-500/10",
-    },
-    red: {
-      border: "hover:border-red-400/60",
-      text: "text-red-400",
-      bg: "group-hover:bg-red-500/10",
-      icon: "bg-red-500/10",
-    },
-  };
-
   return (
     <button
       onClick={onClick}
-      className={`group rounded-[1.5rem] border border-white/10 bg-black/30 p-5 text-left shadow-lg transition duration-300 hover:-translate-y-1 ${styles[accent].border} ${styles[accent].bg}`}
+      className="group flex h-full min-h-[210px] flex-col rounded-2xl border border-slate-800 bg-slate-950 p-5 text-left transition hover:-translate-y-1 hover:border-blue-500/50 hover:bg-slate-900"
     >
-      <div
-        className={`mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 ${styles[accent].icon} text-2xl`}
-      >
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-blue-400">
         {icon}
       </div>
 
-      <h4 className="text-xl font-black text-white">{title}</h4>
+      <h4 className="mt-5 text-xl font-bold text-white">{title}</h4>
 
-      <p className="mt-2 min-h-[66px] text-sm leading-6 text-zinc-400">
+      <p className="mt-2 flex-1 text-sm leading-6 text-slate-400">
         {description}
       </p>
 
-      <div className="mt-5 flex items-center justify-between">
-        <span className={`text-sm font-semibold ${styles[accent].text}`}>
-          Open Module
-        </span>
-
-        <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition group-hover:translate-x-1">
-          →
-        </span>
+      <div className="mt-5 flex items-center justify-between text-sm font-semibold text-blue-400">
+        <span>Open Module</span>
+        <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
       </div>
     </button>
   );

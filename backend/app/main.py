@@ -9,6 +9,7 @@ from app.routes_attendance import router as attendance_router
 from app.routes_dashboard import router as dashboard_router
 from app.routes_ai import router as ai_router
 from app.routes_practice_tests import router as practice_tests_router
+from app.rag.rag_routes import router as rag_router
 
 
 app = FastAPI(
@@ -38,7 +39,7 @@ app.include_router(attendance_router)
 app.include_router(dashboard_router)
 app.include_router(ai_router)
 app.include_router(practice_tests_router)
-
+app.include_router(rag_router)
 
 @app.get("/")
 def home():

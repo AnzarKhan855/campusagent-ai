@@ -2,6 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ClipboardList,
+  Edit3,
+  FileText,
+  FolderOpen,
+  MoreVertical,
+  Plus,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 
 type Subject = {
   id: string;
@@ -52,6 +65,7 @@ export default function AssignmentsPanel() {
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [deletingPdfId, setDeletingPdfId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
 
   const [editTitle, setEditTitle] = useState("");
@@ -60,15 +74,6 @@ export default function AssignmentsPanel() {
   const [editDueDate, setEditDueDate] = useState("");
   const [editPriority, setEditPriority] = useState("medium");
   const [editStatus, setEditStatus] = useState("pending");
-
-  const buttonClass =
-    "rounded-xl border border-slate-700 bg-[#111827] px-4 py-2 text-sm font-semibold text-slate-200 transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-400 hover:bg-emerald-500 hover:text-slate-950 hover:shadow-lg hover:shadow-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60";
-
-  const deleteButtonClass =
-    "rounded-xl border border-red-500/40 bg-[#111827] px-4 py-2 text-sm font-semibold text-red-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-500 hover:text-white hover:shadow-lg hover:shadow-red-500/20 disabled:cursor-not-allowed disabled:opacity-60";
-
-  const addButtonClass =
-    "rounded-xl border border-slate-700 bg-[#111827] px-5 py-3 font-bold text-slate-200 transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-400 hover:bg-emerald-500 hover:text-slate-950 hover:shadow-lg hover:shadow-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60 md:col-span-2";
 
   function getToken() {
     return localStorage.getItem("campusagent_token");
@@ -88,9 +93,7 @@ export default function AssignmentsPanel() {
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/subjects`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await res.json();
@@ -124,9 +127,7 @@ export default function AssignmentsPanel() {
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/assignments`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await res.json();
@@ -229,9 +230,7 @@ export default function AssignmentsPanel() {
       return;
     }
 
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     if (
       file.type !== "application/pdf" &&
@@ -252,9 +251,7 @@ export default function AssignmentsPanel() {
         `${API_BASE_URL}/api/assignments/${assignmentId}/upload-pdf`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
           body: formData,
         }
       );
@@ -297,9 +294,7 @@ export default function AssignmentsPanel() {
       "Delete this uploaded PDF? Extracted questions and saved answers from this PDF will also be removed."
     );
 
-    if (!confirmDelete) {
-      return;
-    }
+    if (!confirmDelete) return;
 
     try {
       setDeletingPdfId(assignmentId);
@@ -309,9 +304,7 @@ export default function AssignmentsPanel() {
         `${API_BASE_URL}/api/assignments/${assignmentId}/delete-pdf`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -330,6 +323,7 @@ export default function AssignmentsPanel() {
       );
 
       setMessage("PDF deleted successfully.");
+      setOpenMenuId(null);
     } catch (error) {
       setMessage(
         error instanceof Error
@@ -343,6 +337,7 @@ export default function AssignmentsPanel() {
 
   function startEditAssignment(assignment: Assignment) {
     setEditingId(getAssignmentId(assignment));
+    setOpenMenuId(null);
     setEditTitle(assignment.title || "");
     setEditSubjectId(assignment.subject_id || "");
     setEditDescription(assignment.details || assignment.description || "");
@@ -441,20 +436,14 @@ export default function AssignmentsPanel() {
       return;
     }
 
-    const confirmDelete = window.confirm(
-      "Delete this assignment permanently?"
-    );
+    const confirmDelete = window.confirm("Delete this assignment permanently?");
 
-    if (!confirmDelete) {
-      return;
-    }
+    if (!confirmDelete) return;
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/assignments/${assignmentId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await res.json();
@@ -464,11 +453,10 @@ export default function AssignmentsPanel() {
       }
 
       setAssignments((prev) =>
-        prev.filter(
-          (assignment) => getAssignmentId(assignment) !== assignmentId
-        )
+        prev.filter((assignment) => getAssignmentId(assignment) !== assignmentId)
       );
 
+      setOpenMenuId(null);
       setMessage("Assignment deleted successfully.");
     } catch (error) {
       setMessage(
@@ -506,47 +494,48 @@ export default function AssignmentsPanel() {
 
   function getPriorityClass(priorityValue: string) {
     if (priorityValue === "high") {
-      return "border-red-400/30 bg-red-500/10 text-red-300";
+      return "border-red-500/30 bg-red-500/10 text-red-300";
     }
 
     if (priorityValue === "medium") {
-      return "border-violet-400/30 bg-violet-500/10 text-violet-300";
+      return "border-amber-500/30 bg-amber-500/10 text-amber-300";
     }
 
-    return "border-emerald-400/30 bg-emerald-500/10 text-emerald-300";
+    return "border-slate-700 bg-slate-900 text-slate-300";
   }
 
   function getStatusClass(statusValue: string) {
     if (statusValue === "completed") {
-      return "border-emerald-400/30 bg-emerald-500/10 text-emerald-300";
+      return "border-emerald-500/30 bg-emerald-500/10 text-emerald-300";
     }
 
     if (statusValue === "in_progress") {
-      return "border-indigo-400/30 bg-indigo-500/10 text-indigo-300";
+      return "border-blue-500/30 bg-blue-500/10 text-blue-300";
     }
 
-    return "border-amber-400/30 bg-amber-500/10 text-amber-300";
+    return "border-slate-700 bg-slate-900 text-slate-300";
   }
 
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-slate-950/75 p-6 text-white shadow-2xl shadow-black/40 backdrop-blur-xl">
-      <div className="mb-7 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+    <section className="rounded-3xl border border-slate-800 bg-slate-900 p-6 text-white shadow-xl">
+      <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-emerald-300">
-            Assignments Manager
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-400">
+            Assignments
           </p>
 
-          <h2 className="mt-2 text-3xl font-black tracking-tight">
-            Track Academic Tasks
+          <h2 className="mt-2 text-3xl font-bold tracking-tight">
+            Academic Task Manager
           </h2>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-            Add assignments, connect them with subjects, upload PDFs, open AI
-            workspaces, write answers, evaluate them, and export PDFs.
+            Manage assignments, deadlines, PDF question banks, AI workspaces,
+            and answer evaluation from one clean workflow.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-violet-400/20 bg-violet-500/10 px-4 py-3 text-sm font-semibold text-violet-200">
+        <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-semibold text-slate-300">
+          <ClipboardList className="h-4 w-4 text-blue-400" />
           {assignments.length} Total Assignments
         </div>
       </div>
@@ -555,41 +544,48 @@ export default function AssignmentsPanel() {
         <div
           className={`mb-5 rounded-xl border px-4 py-3 text-sm ${
             message.toLowerCase().includes("success")
-              ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
-              : "border-red-400/20 bg-red-500/10 text-red-200"
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+              : "border-red-500/30 bg-red-500/10 text-red-300"
           }`}
         >
           {message}
         </div>
       )}
 
-      <div className="mb-6 grid gap-4 md:grid-cols-3">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <SummaryCard
+          icon={<ClipboardList className="h-5 w-5" />}
           title="Pending"
           value={pendingCount}
           description="Assignments left"
-          valueClass="text-amber-300"
         />
 
         <SummaryCard
+          icon={<CheckCircle2 className="h-5 w-5" />}
           title="Completed"
           value={completedCount}
           description="Tasks finished"
-          valueClass="text-emerald-300"
         />
 
         <SummaryCard
+          icon={<AlertTriangle className="h-5 w-5" />}
           title="High Priority"
           value={highPriorityCount}
           description="Needs attention"
-          valueClass="text-red-400"
         />
       </div>
 
       <form
         onSubmit={handleAddAssignment}
-        className="grid gap-4 rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-5 shadow-xl md:grid-cols-2"
+        className="grid gap-4 rounded-2xl border border-slate-800 bg-slate-950 p-5 md:grid-cols-2"
       >
+        <div className="md:col-span-2">
+          <h3 className="text-lg font-bold text-white">Add Assignment</h3>
+          <p className="mt-1 text-sm text-slate-400">
+            Create a new academic task and optionally attach a PDF later.
+          </p>
+        </div>
+
         <FormInput
           label="Assignment Title"
           placeholder="Example: ML Assignment 1"
@@ -597,15 +593,11 @@ export default function AssignmentsPanel() {
           onChange={setTitle}
         />
 
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-200">
-            Subject
-          </label>
-
+        <InputGroup label="Subject">
           <select
             value={subjectId}
             onChange={(e) => setSubjectId(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-500/20"
+            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
           >
             {subjects.length === 0 ? (
               <option value="">No subjects found</option>
@@ -620,55 +612,43 @@ export default function AssignmentsPanel() {
               ))
             )}
           </select>
-        </div>
+        </InputGroup>
 
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-200">
-            Due Date
-          </label>
-
+        <InputGroup label="Due Date">
           <input
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-500/20"
+            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
           />
-        </div>
+        </InputGroup>
 
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-200">
-            Priority
-          </label>
-
+        <InputGroup label="Priority">
           <select
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-500/20"
+            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
             <option value="high">High</option>
           </select>
-        </div>
+        </InputGroup>
 
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-200">
-            Status
-          </label>
-
+        <InputGroup label="Status">
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-500/20"
+            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
           >
             <option value="pending">Pending</option>
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
           </select>
-        </div>
+        </InputGroup>
 
         <div className="md:col-span-2">
-          <label className="mb-2 block text-sm font-semibold text-slate-200">
+          <label className="mb-2 block text-sm font-semibold text-slate-300">
             Description
           </label>
 
@@ -677,57 +657,104 @@ export default function AssignmentsPanel() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            className="w-full resize-none rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none placeholder:text-slate-500 transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-500/20"
+            className="w-full resize-none rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-blue-500"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading || subjects.length === 0}
-          className={addButtonClass}
+          className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 md:col-span-2"
         >
+          <Plus className="h-4 w-4" />
           {loading ? "Adding..." : "Add Assignment"}
         </button>
       </form>
 
       <div className="mt-7">
-        <h3 className="mb-4 text-xl font-black text-white">
-          Your Assignments
-        </h3>
+        <h3 className="mb-4 text-xl font-bold text-white">Your Assignments</h3>
 
         {assignments.length === 0 ? (
-          <div className="rounded-[1.5rem] border border-dashed border-white/15 bg-slate-900/50 p-8 text-center text-slate-400">
+          <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-950 p-8 text-center text-slate-400">
             No assignments added yet.
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2">
             {assignments.map((assignment) => {
               const assignmentId = getAssignmentId(assignment);
+              const isMenuOpen = openMenuId === assignmentId;
+              const hasPdf = Boolean(assignment.pdf_filename || assignment.has_pdf);
 
               return (
                 <div
                   key={assignmentId}
-                  className="rounded-[1.5rem] border border-white/10 bg-slate-900/75 p-5 shadow-lg shadow-black/25 transition duration-300 hover:-translate-y-1 hover:bg-slate-900"
+                  className="rounded-2xl border border-slate-800 bg-slate-950 p-5 transition hover:border-blue-500/40"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h4 className="text-lg font-black text-white">
+                    <div className="min-w-0">
+                      <h4 className="break-words text-lg font-bold text-white">
                         {assignment.title}
                       </h4>
 
-                      <p className="mt-1 text-sm font-semibold text-emerald-300">
+                      <p className="mt-1 text-sm font-semibold text-blue-400">
                         {getSubjectName(assignment)}
                       </p>
                     </div>
 
-                    <span
-                      className={`rounded-full border px-3 py-1 text-xs font-bold uppercase ${getPriorityClass(
-                        assignment.priority
-                      )}`}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenMenuId(isMenuOpen ? null : assignmentId)
+                      }
+                      className="rounded-xl border border-slate-700 bg-slate-900 p-2 text-slate-300 hover:bg-slate-800"
                     >
-                      {assignment.priority}
-                    </span>
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
                   </div>
+
+                  {isMenuOpen && (
+                    <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-900 p-3">
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <MenuButton
+                          icon={<Edit3 className="h-4 w-4" />}
+                          label="Edit Details"
+                          onClick={() => startEditAssignment(assignment)}
+                        />
+
+                        <label
+                          htmlFor={`pdf-upload-${assignmentId}`}
+                          className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
+                        >
+                          <Upload className="h-4 w-4" />
+                          {uploadingId === assignmentId
+                            ? "Uploading PDF..."
+                            : hasPdf
+                            ? "Replace PDF"
+                            : "Upload PDF"}
+                        </label>
+
+                        <MenuButton
+                          icon={<Trash2 className="h-4 w-4" />}
+                          label={
+                            !hasPdf
+                              ? "No PDF to Delete"
+                              : deletingPdfId === assignmentId
+                              ? "Deleting PDF..."
+                              : "Delete PDF"
+                          }
+                          disabled={!hasPdf || deletingPdfId === assignmentId}
+                          onClick={() => handleDeletePdf(assignmentId)}
+                        />
+
+                        <MenuButton
+                          danger
+                          icon={<Trash2 className="h-4 w-4" />}
+                          label="Delete Assignment"
+                          onClick={() => handleDeleteAssignment(assignmentId)}
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <p className="mt-4 text-sm leading-6 text-slate-400">
                     {assignment.details ||
@@ -736,8 +763,16 @@ export default function AssignmentsPanel() {
                   </p>
 
                   <div className="mt-5 flex flex-wrap gap-2 text-xs">
-                    <span className="rounded-full border border-white/10 bg-slate-950/70 px-3 py-1 font-semibold text-slate-300">
+                    <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 font-semibold text-slate-300">
                       Due: {assignment.due_date}
+                    </span>
+
+                    <span
+                      className={`rounded-full border px-3 py-1 font-semibold capitalize ${getPriorityClass(
+                        assignment.priority
+                      )}`}
+                    >
+                      {assignment.priority}
                     </span>
 
                     <span
@@ -748,55 +783,93 @@ export default function AssignmentsPanel() {
                       {assignment.status.replace("_", " ")}
                     </span>
 
-                    {assignment.pdf_filename ? (
-                      <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 font-semibold text-emerald-300">
+                    {hasPdf ? (
+                      <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 font-semibold text-blue-300">
                         PDF uploaded
                       </span>
                     ) : (
-                      <span className="rounded-full border border-slate-400/20 bg-slate-500/10 px-3 py-1 font-semibold text-slate-300">
+                      <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 font-semibold text-slate-300">
                         No PDF
                       </span>
                     )}
 
                     {(assignment.questions_count || 0) > 0 && (
-                      <span className="rounded-full border border-indigo-400/30 bg-indigo-500/10 px-3 py-1 font-semibold text-indigo-300">
+                      <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 font-semibold text-slate-300">
                         {assignment.questions_count} questions
                       </span>
                     )}
 
                     {(assignment.answered_count || 0) > 0 && (
-                      <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 font-semibold text-emerald-300">
+                      <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 font-semibold text-slate-300">
                         {assignment.answered_count} answered
                       </span>
                     )}
                   </div>
 
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        router.push(`/assignments/${assignmentId}/workspace`)
+                      }
+                      className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                    >
+                      <FolderOpen className="h-4 w-4" />
+                      AI Workspace
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        router.push(`/assignments/${assignmentId}/answer`)
+                      }
+                      className="flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"
+                    >
+                      <FileText className="h-4 w-4" />
+                      Answer Workspace
+                    </button>
+                  </div>
+
+                  <input
+                    id={`pdf-upload-${assignmentId}`}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(event) => {
+                      handleUploadPdf(assignmentId, event.target.files?.[0]);
+                      event.target.value = "";
+                      setOpenMenuId(null);
+                    }}
+                  />
+
                   {editingId === assignmentId && (
-                    <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-                      <h5 className="mb-4 font-bold text-emerald-300">
-                        Edit Assignment Details
-                      </h5>
+                    <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-900 p-4">
+                      <div className="mb-4 flex items-center justify-between">
+                        <h5 className="font-bold text-white">
+                          Edit Assignment Details
+                        </h5>
+
+                        <button
+                          type="button"
+                          onClick={cancelEditAssignment}
+                          className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
 
                       <div className="grid gap-4 md:grid-cols-2">
-                        <div>
-                          <label className="mb-2 block text-sm font-semibold text-slate-200">
-                            Title
-                          </label>
-                          <input
-                            value={editTitle}
-                            onChange={(e) => setEditTitle(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-500/20"
-                          />
-                        </div>
+                        <EditInput
+                          label="Title"
+                          value={editTitle}
+                          onChange={setEditTitle}
+                        />
 
-                        <div>
-                          <label className="mb-2 block text-sm font-semibold text-slate-200">
-                            Subject
-                          </label>
+                        <InputGroup label="Subject">
                           <select
                             value={editSubjectId}
                             onChange={(e) => setEditSubjectId(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-500/20"
+                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
                           >
                             {subjects.map((subject) => (
                               <option
@@ -807,150 +880,74 @@ export default function AssignmentsPanel() {
                               </option>
                             ))}
                           </select>
-                        </div>
+                        </InputGroup>
 
-                        <div>
-                          <label className="mb-2 block text-sm font-semibold text-slate-200">
-                            Due Date
-                          </label>
+                        <InputGroup label="Due Date">
                           <input
                             type="date"
                             value={editDueDate}
                             onChange={(e) => setEditDueDate(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-500/20"
+                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
                           />
-                        </div>
+                        </InputGroup>
 
-                        <div>
-                          <label className="mb-2 block text-sm font-semibold text-slate-200">
-                            Priority
-                          </label>
+                        <InputGroup label="Priority">
                           <select
                             value={editPriority}
                             onChange={(e) => setEditPriority(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-500/20"
+                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
                           >
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
                             <option value="high">High</option>
                           </select>
-                        </div>
+                        </InputGroup>
 
-                        <div>
-                          <label className="mb-2 block text-sm font-semibold text-slate-200">
-                            Status
-                          </label>
+                        <InputGroup label="Status">
                           <select
                             value={editStatus}
                             onChange={(e) => setEditStatus(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-500/20"
+                            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
                           >
                             <option value="pending">Pending</option>
                             <option value="in_progress">In Progress</option>
                             <option value="completed">Completed</option>
                           </select>
-                        </div>
+                        </InputGroup>
 
                         <div className="md:col-span-2">
-                          <label className="mb-2 block text-sm font-semibold text-slate-200">
+                          <label className="mb-2 block text-sm font-semibold text-slate-300">
                             Description
                           </label>
                           <textarea
                             value={editDescription}
                             onChange={(e) => setEditDescription(e.target.value)}
                             rows={3}
-                            className="w-full resize-none rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-500/20"
+                            className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
                           />
                         </div>
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-3">
                         <button
+                          type="button"
                           onClick={() => handleUpdateAssignment(assignmentId)}
                           disabled={loading}
-                          className={buttonClass}
+                          className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                         >
                           {loading ? "Saving..." : "Save Changes"}
                         </button>
 
                         <button
+                          type="button"
                           onClick={cancelEditAssignment}
-                          className={buttonClass}
+                          className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800"
                         >
                           Cancel
                         </button>
                       </div>
                     </div>
                   )}
-
-                  <div className="mt-5 flex flex-wrap gap-3 border-t border-white/10 pt-4">
-                    <input
-                      id={`pdf-upload-${assignmentId}`}
-                      type="file"
-                      accept="application/pdf"
-                      className="hidden"
-                      onChange={(event) => {
-                        handleUploadPdf(
-                          assignmentId,
-                          event.target.files?.[0]
-                        );
-                        event.target.value = "";
-                      }}
-                    />
-
-                    <label
-                      htmlFor={`pdf-upload-${assignmentId}`}
-                      className={`${buttonClass} cursor-pointer ${
-                        uploadingId === assignmentId
-                          ? "pointer-events-none opacity-60"
-                          : ""
-                      }`}
-                    >
-                      {uploadingId === assignmentId ? "Uploading..." : "Upload PDF"}
-                    </label>
-
-                    <button
-                      onClick={() => handleDeletePdf(assignmentId)}
-                      disabled={!assignment.pdf_filename || deletingPdfId === assignmentId}
-                      className={buttonClass}
-                    >
-                      {deletingPdfId === assignmentId
-                        ? "Deleting PDF..."
-                        : "Delete PDF"}
-                    </button>
-
-                    <button
-                      onClick={() => startEditAssignment(assignment)}
-                      className={buttonClass}
-                    >
-                      Edit Details
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        router.push(`/assignments/${assignmentId}/workspace`)
-                      }
-                      className={buttonClass}
-                    >
-                      AI Workspace
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        router.push(`/assignments/${assignmentId}/answer`)
-                      }
-                      className={buttonClass}
-                    >
-                      Answer Workspace
-                    </button>
-
-                    <button
-                      onClick={() => handleDeleteAssignment(assignmentId)}
-                      className={deleteButtonClass}
-                    >
-                      Delete Assignment
-                    </button>
-                  </div>
                 </div>
               );
             })}
@@ -962,20 +959,23 @@ export default function AssignmentsPanel() {
 }
 
 function SummaryCard({
+  icon,
   title,
   value,
   description,
-  valueClass,
 }: {
+  icon: React.ReactNode;
   title: string;
   value: string | number;
   description: string;
-  valueClass: string;
 }) {
   return (
-    <div className="rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-5 shadow-lg shadow-black/25">
-      <p className="text-sm text-slate-400">{title}</p>
-      <h3 className={`mt-2 text-4xl font-black ${valueClass}`}>{value}</h3>
+    <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-blue-400">
+        {icon}
+      </div>
+      <p className="mt-4 text-sm text-slate-400">{title}</p>
+      <h3 className="mt-2 text-4xl font-bold text-white">{value}</h3>
       <p className="mt-2 text-sm text-slate-500">{description}</p>
     </div>
   );
@@ -993,18 +993,82 @@ function FormInput({
   onChange: (value: string) => void;
 }) {
   return (
-    <div>
-      <label className="mb-2 block text-sm font-semibold text-slate-200">
-        {label}
-      </label>
-
+    <InputGroup label={label}>
       <input
         type="text"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-white outline-none placeholder:text-slate-500 transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-500/20"
+        className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-blue-500"
       />
+    </InputGroup>
+  );
+}
+
+function EditInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <InputGroup label={label}>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-blue-500"
+      />
+    </InputGroup>
+  );
+}
+
+function InputGroup({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-semibold text-slate-300">
+        {label}
+      </label>
+      {children}
     </div>
+  );
+}
+
+function MenuButton({
+  icon,
+  label,
+  onClick,
+  disabled,
+  danger,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${
+        danger
+          ? "text-red-300 hover:bg-red-500/10"
+          : "text-slate-300 hover:bg-slate-800"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
