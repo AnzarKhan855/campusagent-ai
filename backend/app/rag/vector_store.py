@@ -32,6 +32,27 @@ else:
     client = QdrantClient(path=QDRANT_PATH)
 
 
+def ping_vector_store() -> dict:
+    mode = "remote_qdrant_cloud" if qdrant_url else "local_embedded"
+    try:
+        collections = client.get_collections().collections
+        collection_names = [c.name for c in collections]
+        return {
+            "mode": mode,
+            "connectivity": "connected",
+            "collection_exists": COLLECTION_NAME in collection_names,
+            "persistent": bool(qdrant_url)
+        }
+    except Exception as error:
+        logger.warning(f"Vector store health ping failed: {error}")
+        return {
+            "mode": mode,
+            "connectivity": f"disconnected: {str(error)}",
+            "collection_exists": False,
+            "persistent": bool(qdrant_url)
+        }
+
+
 def ensure_collection(vector_size: int = 384):
     try:
         collections = client.get_collections().collections

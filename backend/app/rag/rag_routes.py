@@ -8,6 +8,7 @@ from app.rag.pdf_library_service import (
     get_user_rag_documents,
     rename_rag_document,
     delete_rag_document_metadata,
+    get_rag_document_by_id,
 )
 from app.rag.vector_store import delete_document_vectors
 
@@ -74,8 +75,13 @@ async def delete_rag_pdf(
 ):
     user_id = str(current_user["_id"])
 
+    # 1. Verify existence and ownership (returns 404 if not found or belongs to another user)
+    await get_rag_document_by_id(document_id=document_id, user_id=user_id)
+
+    # 2. Delete vectors from Qdrant
     delete_document_vectors(user_id=user_id, document_id=document_id)
 
+    # 3. Delete metadata from Mongo
     result = await delete_rag_document_metadata(
         document_id=document_id,
         user_id=user_id,

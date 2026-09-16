@@ -10,7 +10,11 @@ from pdfminer.high_level import extract_text
 from app.ai_config import generate_chat_completion
 from app.rag.chunker import chunk_text
 from app.rag.embeddings import get_embeddings, get_single_embedding
-from app.rag.pdf_library_service import create_rag_document, get_rag_document_by_id
+from app.rag.pdf_library_service import (
+    create_rag_document,
+    get_rag_document_by_id,
+    delete_rag_document_metadata,
+)
 from app.rag.vector_store import add_chunks_to_qdrant, search_similar_chunks
 
 
@@ -76,13 +80,21 @@ async def upload_pdf_to_rag(file: UploadFile, user_id: str):
             qdrant_collection=QDRANT_COLLECTION_NAME,
         )
 
-        add_chunks_to_qdrant(
-            chunks=chunks,
-            embeddings=embeddings,
-            user_id=user_id,
-            document_id=document["id"],
-            filename=safe_filename,
-        )
+        try:
+            add_chunks_to_qdrant(
+                chunks=chunks,
+                embeddings=embeddings,
+                user_id=user_id,
+                document_id=document["id"],
+                filename=safe_filename,
+            )
+        except Exception as qdrant_error:
+            # ROLLBACK: Delete the MongoDB document metadata so no ghost/orphan record remains
+            await delete_rag_document_metadata(document["id"], user_id)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Vector storage failed: {str(qdrant_error)}. Rolled back document metadata.",
+            ) from qdrant_error
 
         return {
             "success": True,

@@ -57,17 +57,65 @@ async def health_check():
     except Exception as e:
         db_status = f"error: {str(e)}"
 
-    qdrant_url = os.getenv("QDRANT_URL", "").strip()
-    vector_mode = "remote_qdrant_cloud" if qdrant_url else "local_embedded"
+    from app.rag.vector_store import ping_vector_store
+    vector_health = ping_vector_store()
 
-    is_healthy = db_status == "connected"
+    is_db_ok = db_status == "connected"
+    is_vector_ok = vector_health.get("connectivity") == "connected"
+    is_remote = vector_health.get("persistent", False)
+
+    is_healthy = is_db_ok and is_vector_ok
+
+    persistence_note = (
+        "persistent_cloud"
+        if is_remote
+        else "ephemeral_container_disk (P0 persistence risk: vectors erased on container restart)"
+    )
 
     return {
         "status": "healthy" if is_healthy else "degraded",
         "service": "CampusAgent AI Backend",
         "database": db_status,
-        "vector_store": vector_mode,
+        "vector_store": vector_health.get("mode"),
+        "vector_connectivity": vector_health.get("connectivity"),
+        "persistence": persistence_note,
         "version": "1.0.0"
+    }
+
+
+@app.get("/ready")
+async def readiness_check():
+    db_status = "connected"
+    try:
+        await database.command("ping")
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+
+    from app.rag.vector_store import ping_vector_store
+    vector_health = ping_vector_store()
+
+    is_db_ok = db_status == "connected"
+    is_vector_ok = vector_health.get("connectivity") == "connected"
+    is_persistent = vector_health.get("persistent", False)
+
+    ready = is_db_ok and is_vector_ok and is_persistent
+
+    blockers = []
+    if not is_db_ok:
+        blockers.append("MongoDB connection failure")
+    if not is_vector_ok:
+        blockers.append(f"Vector store unreachable: {vector_health.get('connectivity')}")
+    if not is_persistent:
+        blockers.append("QDRANT_URL and QDRANT_API_KEY not configured (ephemeral storage P0 blocker)")
+
+    return {
+        "ready": ready,
+        "service": "CampusAgent AI Backend",
+        "database": db_status,
+        "vector_store": vector_health.get("mode"),
+        "vector_connectivity": vector_health.get("connectivity"),
+        "persistent": is_persistent,
+        "blockers": blockers
     }
 
 
