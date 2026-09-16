@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { extractErrorMessage } from "@/lib/error";
 
 type Assignment = {
   _id?: string;
@@ -75,12 +76,12 @@ export default function AssignmentWorkspacePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to fetch assignment");
+        throw new Error(extractErrorMessage(data, "Failed to fetch assignment"));
       }
 
       setAssignment(data.assignment || data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setLoading(false);
     }
@@ -114,12 +115,12 @@ export default function AssignmentWorkspacePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "AI request failed");
+        throw new Error(extractErrorMessage(data, "AI request failed"));
       }
 
       setAiAnswer(data.answer || "No answer received from AI.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setAiLoading(false);
     }
@@ -151,13 +152,13 @@ export default function AssignmentWorkspacePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to extract questions");
+        throw new Error(extractErrorMessage(data, "Failed to extract questions"));
       }
 
       setMessage(`Extracted ${data.count} questions successfully.`);
       setAssignment(data.assignment);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setExtracting(false);
     }

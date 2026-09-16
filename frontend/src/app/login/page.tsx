@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { extractErrorMessage } from "@/lib/error";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,7 +34,7 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.detail || "Login failed");
+        setMessage(extractErrorMessage(data, "Login failed"));
         return;
       }
 
@@ -43,7 +44,7 @@ export default function LoginPage() {
       setMessage("Login successful");
       router.push("/dashboard");
     } catch (error) {
-      setMessage("Something went wrong. Please check backend.");
+      setMessage(extractErrorMessage(error, "Something went wrong. Please check backend."));
     } finally {
       setLoading(false);
     }
@@ -99,6 +100,7 @@ export default function LoginPage() {
               placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              minLength={8}
               required
             />
           </div>

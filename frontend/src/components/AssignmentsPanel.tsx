@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { extractErrorMessage } from "@/lib/error";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -99,7 +100,7 @@ export default function AssignmentsPanel() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to fetch subjects");
+        throw new Error(extractErrorMessage(data, "Failed to fetch subjects"));
       }
 
       const userSubjects = data.subjects || [];
@@ -109,11 +110,7 @@ export default function AssignmentsPanel() {
         setSubjectId(userSubjects[0].id || userSubjects[0]._id);
       }
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while fetching subjects."
-      );
+      setMessage(extractErrorMessage(error, "Something went wrong while fetching subjects."));
     }
   }
 
@@ -133,16 +130,12 @@ export default function AssignmentsPanel() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to fetch assignments");
+        throw new Error(extractErrorMessage(data, "Failed to fetch assignments"));
       }
 
       setAssignments(data.assignments || []);
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while fetching assignments."
-      );
+      setMessage(extractErrorMessage(error, "Something went wrong while fetching assignments."));
     }
   }
 
@@ -199,7 +192,7 @@ export default function AssignmentsPanel() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to add assignment");
+        throw new Error(extractErrorMessage(data, "Failed to add assignment"));
       }
 
       setAssignments((prev) => [data.assignment, ...prev]);
@@ -212,11 +205,7 @@ export default function AssignmentsPanel() {
 
       setMessage("Assignment added successfully.");
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while adding assignment."
-      );
+      setMessage(extractErrorMessage(error, "Something went wrong while adding assignment."));
     } finally {
       setLoading(false);
     }
@@ -259,7 +248,7 @@ export default function AssignmentsPanel() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to upload PDF");
+        throw new Error(extractErrorMessage(data, "Failed to upload PDF"));
       }
 
       setAssignments((prev) =>
@@ -272,11 +261,7 @@ export default function AssignmentsPanel() {
 
       setMessage("PDF uploaded and parsed successfully.");
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while uploading PDF."
-      );
+      setMessage(extractErrorMessage(error, "Something went wrong while uploading PDF."));
     } finally {
       setUploadingId(null);
     }
@@ -311,7 +296,7 @@ export default function AssignmentsPanel() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to delete PDF");
+        throw new Error(extractErrorMessage(data, "Failed to delete PDF"));
       }
 
       setAssignments((prev) =>
@@ -325,11 +310,7 @@ export default function AssignmentsPanel() {
       setMessage("PDF deleted successfully.");
       setOpenMenuId(null);
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while deleting PDF."
-      );
+      setMessage(extractErrorMessage(error, "Something went wrong while deleting PDF."));
     } finally {
       setDeletingPdfId(null);
     }
@@ -404,7 +385,7 @@ export default function AssignmentsPanel() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to update assignment");
+        throw new Error(extractErrorMessage(data, "Failed to update assignment"));
       }
 
       setAssignments((prev) =>
@@ -418,11 +399,7 @@ export default function AssignmentsPanel() {
       cancelEditAssignment();
       setMessage("Assignment updated successfully.");
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while updating assignment."
-      );
+      setMessage(extractErrorMessage(error, "Something went wrong while updating assignment."));
     } finally {
       setLoading(false);
     }
@@ -449,7 +426,7 @@ export default function AssignmentsPanel() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to delete assignment");
+        throw new Error(extractErrorMessage(data, "Failed to delete assignment"));
       }
 
       setAssignments((prev) =>
@@ -459,11 +436,7 @@ export default function AssignmentsPanel() {
       setOpenMenuId(null);
       setMessage("Assignment deleted successfully.");
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while deleting assignment."
-      );
+      setMessage(extractErrorMessage(error, "Something went wrong while deleting assignment."));
     }
   }
 

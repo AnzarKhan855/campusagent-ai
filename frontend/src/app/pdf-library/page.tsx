@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { extractErrorMessage } from "@/lib/error";
 import {
   ArrowLeft,
   FileText,
@@ -59,14 +60,12 @@ export default function PdfLibraryPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to fetch PDFs");
+        throw new Error(extractErrorMessage(data, "Failed to fetch PDFs"));
       }
 
       setDocuments(data.documents || []);
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Failed to load PDF library."
-      );
+      setMessage(extractErrorMessage(error, "Failed to load PDF library."));
     } finally {
       setLoading(false);
     }
@@ -105,7 +104,7 @@ export default function PdfLibraryPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Rename failed");
+        throw new Error(extractErrorMessage(data, "Rename failed"));
       }
 
       setRenamingId(null);
@@ -113,7 +112,7 @@ export default function PdfLibraryPage() {
       setMessage("PDF renamed successfully.");
       fetchDocuments();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Failed to rename PDF.");
+      setMessage(extractErrorMessage(error, "Failed to rename PDF."));
     }
   }
 
@@ -141,13 +140,13 @@ export default function PdfLibraryPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Delete failed");
+        throw new Error(extractErrorMessage(data, "Delete failed"));
       }
 
       setMessage("PDF deleted successfully.");
       fetchDocuments();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Failed to delete PDF.");
+      setMessage(extractErrorMessage(error, "Failed to delete PDF."));
     }
   }
 

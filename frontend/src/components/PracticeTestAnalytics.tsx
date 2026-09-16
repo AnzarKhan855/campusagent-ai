@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { extractErrorMessage } from "@/lib/error";
 import {
   Bar,
   BarChart,
@@ -134,12 +135,12 @@ export default function PracticeTestAnalytics() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to fetch analytics");
+        throw new Error(extractErrorMessage(data, "Failed to fetch analytics"));
       }
 
       setAnalytics(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setLoading(false);
     }

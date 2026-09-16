@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { extractErrorMessage } from "@/lib/error";
 
 type Difficulty = "easy" | "medium" | "hard";
 
@@ -394,7 +395,7 @@ export default function AssignmentAnswerPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to fetch assignment");
+        throw new Error(extractErrorMessage(data, "Failed to fetch assignment"));
       }
 
       const fetchedAssignment: Assignment = data.assignment;
@@ -417,7 +418,7 @@ export default function AssignmentAnswerPage() {
         setCurrentQuestionIndex(0);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setLoading(false);
     }
@@ -454,13 +455,13 @@ export default function AssignmentAnswerPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to save answer");
+        throw new Error(extractErrorMessage(data, "Failed to save answer"));
       }
 
       setAssignment(data.assignment);
       setMessage(`Answer ${questionIndex + 1} saved successfully.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setSavingIndex(null);
     }
@@ -505,7 +506,7 @@ export default function AssignmentAnswerPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to update important status");
+        throw new Error(extractErrorMessage(data, "Failed to update important status"));
       }
 
       setAssignment(data.assignment);
@@ -516,7 +517,7 @@ export default function AssignmentAnswerPage() {
           : `Question ${questionIndex + 1} removed from important.`
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setImportantLoadingIndex(null);
     }
@@ -559,7 +560,7 @@ export default function AssignmentAnswerPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to update difficulty");
+        throw new Error(extractErrorMessage(data, "Failed to update difficulty"));
       }
 
       setAssignment(data.assignment);
@@ -567,7 +568,7 @@ export default function AssignmentAnswerPage() {
         `Question ${questionIndex + 1} difficulty updated to ${difficulty}.`
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setDifficultyLoadingIndex(null);
     }
@@ -607,7 +608,7 @@ export default function AssignmentAnswerPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to auto tag questions");
+        throw new Error(extractErrorMessage(data, "Failed to auto tag questions"));
       }
 
       setAssignment(data.assignment);
@@ -618,7 +619,7 @@ export default function AssignmentAnswerPage() {
         `AI auto tagged ${data.tagged_count || totalQuestions} questions successfully.`
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setAutoTagLoading(false);
     }
@@ -660,13 +661,13 @@ export default function AssignmentAnswerPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to generate AI answer");
+        throw new Error(extractErrorMessage(data, "Failed to generate AI answer"));
       }
 
       setAssignment(data.assignment);
       setMessage(`AI answer generated for Question ${questionIndex + 1}.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setAiAnswerLoadingIndex(null);
     }
@@ -708,7 +709,7 @@ ${question.question}`;
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "AI request failed");
+        throw new Error(extractErrorMessage(data, "AI request failed"));
       }
 
       setAiHelp((previous) => ({
@@ -716,7 +717,7 @@ ${question.question}`;
         [questionIndex]: data.answer || "No AI response received.",
       }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setAiHelpLoadingIndex(null);
     }
@@ -759,7 +760,7 @@ ${question.question}`;
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to evaluate answer");
+        throw new Error(extractErrorMessage(data, "Failed to evaluate answer"));
       }
 
       setAssignment(data.assignment);
@@ -806,11 +807,7 @@ ${question.question}`;
 
         try {
           const data = await response.json();
-          errorMessage =
-            data.detail?.message ||
-            data.detail ||
-            data.message ||
-            "Failed to generate PDF";
+          errorMessage = extractErrorMessage(data, "Failed to generate PDF");
         } catch {
           errorMessage = `Failed to generate PDF. Status: ${response.status}`;
         }
@@ -837,7 +834,7 @@ ${question.question}`;
 
       setMessage("PDF downloaded successfully.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch");
+      setError(extractErrorMessage(err, "Failed to fetch"));
     }
   }
 
@@ -868,11 +865,7 @@ ${question.question}`;
 
         try {
           const data = await response.json();
-          errorMessage =
-            data.detail?.message ||
-            data.detail ||
-            data.message ||
-            "Failed to generate PDF";
+          errorMessage = extractErrorMessage(data, "Failed to generate PDF");
         } catch {
           errorMessage = `Failed to generate PDF. Status: ${response.status}`;
         }
@@ -899,7 +892,7 @@ ${question.question}`;
 
       setMessage("PDF opened for printing.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     }
   }
 
@@ -928,7 +921,7 @@ ${question.question}`;
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to extract questions");
+        throw new Error(extractErrorMessage(data, "Failed to extract questions"));
       }
 
       setMessage(`Extracted ${data.count} questions successfully.`);
@@ -946,7 +939,7 @@ ${question.question}`;
       setAnswers(initialAnswers);
       setAiHelp({});
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     }
   }
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { extractErrorMessage } from "@/lib/error";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -20,6 +21,12 @@ export default function SignupPage() {
     setLoading(true);
     setMessage("");
 
+    if (password.length < 8) {
+      setMessage("Password must be at least 8 characters long.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch(`${apiUrl}/api/auth/signup`, {
         method: "POST",
@@ -37,7 +44,7 @@ export default function SignupPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.detail || "Signup failed");
+        setMessage(extractErrorMessage(data, "Signup failed"));
         return;
       }
 
@@ -47,7 +54,7 @@ export default function SignupPage() {
       setMessage("Signup successful");
       router.push("/dashboard");
     } catch (error) {
-      setMessage("Something went wrong. Please check backend.");
+      setMessage(extractErrorMessage(error, "Something went wrong. Please check backend."));
     } finally {
       setLoading(false);
     }
@@ -118,11 +125,13 @@ export default function SignupPage() {
             <input
               className="w-full rounded-xl border border-white/10 bg-slate-900/80 px-4 py-3 text-white outline-none placeholder:text-slate-500 transition focus:border-indigo-400/60 focus:ring-2 focus:ring-indigo-500/20"
               type="password"
-              placeholder="Enter password"
+              placeholder="Enter password (min 8 characters)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              minLength={8}
               required
             />
+            <p className="mt-1 text-xs text-slate-400">Must be at least 8 characters</p>
           </div>
 
           <div>

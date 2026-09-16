@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { extractErrorMessage } from "@/lib/error";
 import {
   Bar,
   BarChart,
@@ -89,7 +90,7 @@ export default function AttendancePanel() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to fetch subjects");
+        throw new Error(extractErrorMessage(data, "Failed to fetch subjects"));
       }
 
       const userSubjects = data.subjects || [];
@@ -99,11 +100,7 @@ export default function AttendancePanel() {
         setSubjectId(userSubjects[0].id);
       }
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while fetching subjects."
-      );
+      setMessage(extractErrorMessage(error, "Something went wrong while fetching subjects."));
     }
   }
 
@@ -125,16 +122,12 @@ export default function AttendancePanel() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to fetch attendance records");
+        throw new Error(extractErrorMessage(data, "Failed to fetch attendance records"));
       }
 
       setAttendanceRecords(data.attendance || []);
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while fetching attendance."
-      );
+      setMessage(extractErrorMessage(error, "Something went wrong while fetching attendance."));
     }
   }
 
@@ -207,7 +200,7 @@ export default function AttendancePanel() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to add attendance");
+        throw new Error(extractErrorMessage(data, "Failed to add attendance"));
       }
 
       setAttendanceRecords((prev) => [data.attendance, ...prev]);
@@ -217,11 +210,7 @@ export default function AttendancePanel() {
       setRequiredPercentage("75");
       setMessage("Attendance added successfully.");
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while adding attendance."
-      );
+      setMessage(extractErrorMessage(error, "Something went wrong while adding attendance."));
     } finally {
       setLoading(false);
     }
@@ -257,7 +246,7 @@ export default function AttendancePanel() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to update attendance");
+        throw new Error(extractErrorMessage(data, "Failed to update attendance"));
       }
 
       setAttendanceRecords((prev) =>
@@ -266,11 +255,7 @@ export default function AttendancePanel() {
 
       setMessage("Attendance updated successfully.");
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while updating attendance."
-      );
+      setMessage(extractErrorMessage(error, "Something went wrong while updating attendance."));
     }
   }
 
@@ -360,7 +345,7 @@ export default function AttendancePanel() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to delete attendance");
+        throw new Error(extractErrorMessage(data, "Failed to delete attendance"));
       }
 
       setAttendanceRecords((prev) =>
@@ -373,11 +358,7 @@ export default function AttendancePanel() {
 
       setMessage("Attendance deleted successfully.");
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while deleting attendance."
-      );
+      setMessage(extractErrorMessage(error, "Something went wrong while deleting attendance."));
     }
   }
 

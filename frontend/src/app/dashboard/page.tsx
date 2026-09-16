@@ -3,6 +3,7 @@
 import PracticeTestAnalytics from "@/components/PracticeTestAnalytics";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { extractErrorMessage } from "@/lib/error";
 import {
   BookOpen,
   ClipboardList,
@@ -89,13 +90,13 @@ export default function DashboardPage() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.detail || "Failed to fetch dashboard overview");
+          throw new Error(extractErrorMessage(data, "Failed to fetch dashboard overview"));
         }
 
         setOverview(data.overview);
       } catch (error) {
         console.error("Dashboard overview error:", error);
-        setError("Could not load dashboard overview. Please login again.");
+        setError(extractErrorMessage(error, "Could not load dashboard overview. Please login again."));
       } finally {
         setLoading(false);
       }

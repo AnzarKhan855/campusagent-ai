@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { extractErrorMessage } from "@/lib/error";
 
 type Difficulty = "all" | "easy" | "medium" | "hard";
 
@@ -121,7 +122,7 @@ export default function CreatePracticeTestPage() {
       const assignmentData = await assignmentResponse.json();
 
       if (!assignmentResponse.ok) {
-        throw new Error(assignmentData.detail || "Failed to fetch assignment");
+        throw new Error(extractErrorMessage(assignmentData, "Failed to fetch assignment"));
       }
 
       setAssignment(assignmentData.assignment);
@@ -141,7 +142,7 @@ export default function CreatePracticeTestPage() {
         setTests(testsData.tests || []);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setLoading(false);
     }
@@ -189,13 +190,13 @@ export default function CreatePracticeTestPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to create practice test");
+        throw new Error(extractErrorMessage(data, "Failed to create practice test"));
       }
 
       setMessage("Practice test created successfully.");
       router.push(`/practice-tests/${data.test.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setCreating(false);
     }

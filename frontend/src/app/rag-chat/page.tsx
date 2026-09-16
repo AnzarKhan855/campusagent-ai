@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { extractErrorMessage } from "@/lib/error";
 import {
   ArrowLeft,
   Brain,
@@ -85,7 +86,7 @@ function RagChatContent() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Failed to fetch PDF library");
+        throw new Error(extractErrorMessage(data, "Failed to fetch PDF library"));
       }
 
       const foundDoc = (data.documents || []).find(
@@ -96,9 +97,7 @@ function RagChatContent() {
         setSelectedDocument(foundDoc);
       }
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Failed to load selected PDF."
-      );
+      setMessage(extractErrorMessage(error, "Failed to load selected PDF."));
     }
   }
 
@@ -137,7 +136,7 @@ function RagChatContent() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "PDF upload failed");
+        throw new Error(extractErrorMessage(data, "PDF upload failed"));
       }
 
       const chunksCreated =
@@ -146,9 +145,7 @@ function RagChatContent() {
       setMessage(`PDF uploaded successfully. Chunks created: ${chunksCreated}`);
       setFile(null);
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Something went wrong."
-      );
+      setMessage(extractErrorMessage(error, "Something went wrong."));
     } finally {
       setLoadingUpload(false);
     }
@@ -188,15 +185,13 @@ function RagChatContent() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Question failed");
+        throw new Error(extractErrorMessage(data, "Question failed"));
       }
 
       setAnswer(data.answer || "");
       setSources(data.sources || []);
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Something went wrong."
-      );
+      setMessage(extractErrorMessage(error, "Something went wrong."));
     } finally {
       setLoadingAsk(false);
     }

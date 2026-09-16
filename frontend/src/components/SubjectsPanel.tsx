@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { extractErrorMessage } from "@/lib/error";
 
 type Subject = {
   id: string;
@@ -81,14 +82,14 @@ export default function SubjectsPanel() {
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.detail || "Failed to fetch subjects");
+        setMessage(extractErrorMessage(data, "Failed to fetch subjects"));
         return;
       }
 
       setSubjects(data.subjects || []);
     } catch (error) {
       console.error(error);
-      setMessage("Something went wrong while fetching subjects.");
+      setMessage(extractErrorMessage(error, "Something went wrong while fetching subjects."));
     }
   };
 
@@ -128,7 +129,7 @@ export default function SubjectsPanel() {
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.detail || "Failed to add subject");
+        setMessage(extractErrorMessage(data, "Failed to add subject"));
         return;
       }
 
@@ -141,7 +142,7 @@ export default function SubjectsPanel() {
       await fetchSubjects();
     } catch (error) {
       console.error(error);
-      setMessage("Something went wrong while adding subject.");
+      setMessage(extractErrorMessage(error, "Something went wrong while adding subject."));
     } finally {
       setLoading(false);
     }
@@ -166,7 +167,7 @@ export default function SubjectsPanel() {
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.detail || "Failed to delete subject");
+        setMessage(extractErrorMessage(data, "Failed to delete subject"));
         return;
       }
 
@@ -174,7 +175,7 @@ export default function SubjectsPanel() {
       await fetchSubjects();
     } catch (error) {
       console.error(error);
-      setMessage("Something went wrong while deleting subject.");
+      setMessage(extractErrorMessage(error, "Something went wrong while deleting subject."));
     }
   };
 

@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { extractErrorMessage } from "@/lib/error";
 
 type PracticeQuestion = {
   question_index: number;
@@ -157,7 +158,7 @@ export default function PracticeTestAttemptPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to fetch practice test");
+        throw new Error(extractErrorMessage(data, "Failed to fetch practice test"));
       }
 
       setTest(data.test);
@@ -169,7 +170,7 @@ export default function PracticeTestAttemptPage() {
         setCurrentIndex(0);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setLoading(false);
     }
@@ -210,14 +211,14 @@ export default function PracticeTestAttemptPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to save answer");
+        throw new Error(extractErrorMessage(data, "Failed to save answer"));
       }
 
       setTest(data.test);
       syncAnswersFromTest(data.test);
       setMessage(`Answer ${questionIndex + 1} saved successfully.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setSavingIndex(null);
     }
@@ -257,14 +258,14 @@ export default function PracticeTestAttemptPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to submit practice test");
+        throw new Error(extractErrorMessage(data, "Failed to submit practice test"));
       }
 
       setTest(data.test);
       syncAnswersFromTest(data.test);
       setMessage("Practice test submitted successfully.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(extractErrorMessage(err, "Something went wrong"));
     } finally {
       setSubmitting(false);
     }

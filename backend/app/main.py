@@ -1,5 +1,6 @@
-import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import database
@@ -18,6 +19,29 @@ app = FastAPI(
     description="Backend API for CampusAgent AI student productivity platform",
     version="1.0.0",
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    error_messages = []
+    for err in exc.errors():
+        loc = [str(x) for x in err.get("loc", []) if x != "body"]
+        field_path = ".".join(loc)
+        msg = err.get("msg", "Invalid value")
+        if field_path:
+            error_messages.append(f"{field_path}: {msg}")
+        else:
+            error_messages.append(msg)
+
+    formatted_detail = "; ".join(error_messages) if error_messages else "Request validation failed"
+
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": formatted_detail,
+            "errors": exc.errors(),
+        },
+    )
 
 origins = [
     "http://localhost:3000",

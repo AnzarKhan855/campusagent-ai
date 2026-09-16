@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { extractErrorMessage } from "@/lib/error";
 import {
   ArrowLeft,
   Bot,
@@ -134,10 +135,7 @@ export default function AICommandPage() {
       }
 
       if (!response.ok) {
-        const message =
-          typeof data.detail === "string"
-            ? data.detail
-            : data.message || "AI Agent request failed";
+        const message = extractErrorMessage(data, "AI Agent request failed");
 
         if (
           response.status === 401 ||
@@ -157,9 +155,7 @@ export default function AICommandPage() {
     } catch (error) {
       console.error("AI Agent Error:", error);
       setAiError(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while running AI Agent."
+        extractErrorMessage(error, "Something went wrong while running AI Agent.")
       );
     } finally {
       setAiLoading(false);
