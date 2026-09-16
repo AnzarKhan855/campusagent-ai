@@ -10,6 +10,7 @@ from qdrant_client.models import (
     Filter,
     FieldCondition,
     MatchValue,
+    PayloadSchemaType,
 )
 
 logger = logging.getLogger(__name__)
@@ -67,6 +68,21 @@ def ensure_collection(vector_size: int = 384):
                     distance=Distance.COSINE,
                 ),
             )
+
+        # Ensure payload indexes exist for filtered queries and deletions
+        try:
+            col_info = client.get_collection(COLLECTION_NAME)
+            payload_schema = getattr(col_info, "payload_schema", {}) or {}
+            for field in ("user_id", "document_id"):
+                if field not in payload_schema:
+                    logger.info(f"Creating keyword payload index for '{field}' in '{COLLECTION_NAME}'")
+                    client.create_payload_index(
+                        collection_name=COLLECTION_NAME,
+                        field_name=field,
+                        field_schema=PayloadSchemaType.KEYWORD,
+                    )
+        except Exception as idx_err:
+            logger.warning(f"Could not verify/create payload index: {idx_err}")
     except Exception as error:
         logger.error(f"Failed to ensure Qdrant collection '{COLLECTION_NAME}': {error}", exc_info=True)
         raise RuntimeError(f"Vector store collection initialization failed: {str(error)}") from error
