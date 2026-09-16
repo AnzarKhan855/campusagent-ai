@@ -7,8 +7,8 @@ export default function SignupPage() {
   const router = useRouter();
 
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("anzar@test.com");
-  const [password, setPassword] = useState("12345678");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);

@@ -9,10 +9,8 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-try:
-    from groq import AsyncGroq
-except Exception:
-    AsyncGroq = None
+import asyncio
+from app.ai_config import generate_chat_completion, safe_extract_json
 
 from app.auth import get_current_user
 from app.database import database
@@ -210,23 +208,6 @@ async def evaluate_practice_answer_with_groq(
     topic_tag: str = "",
     difficulty: str = "medium",
 ) -> dict:
-    if AsyncGroq is None:
-        raise HTTPException(
-            status_code=500,
-            detail="Groq package is not installed. Run: pip install groq",
-        )
-
-    api_key = os.getenv("GROQ_API_KEY", "").strip()
-
-    if not api_key:
-        raise HTTPException(
-            status_code=500,
-            detail="GROQ_API_KEY is missing in backend .env file",
-        )
-
-    model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant").strip()
-    client = AsyncGroq(api_key=api_key)
-
     system_prompt = """
 You are CampusAgent AI, an academic practice test evaluator for B.Tech students.
 
@@ -269,8 +250,7 @@ PDF Context:
 """
 
     try:
-        completion = await client.chat.completions.create(
-            model=model,
+        raw_answer = await generate_chat_completion(
             messages=[
                 {
                     "role": "system",
@@ -285,10 +265,8 @@ PDF Context:
             max_tokens=900,
         )
 
-        raw_answer = completion.choices[0].message.content or ""
-
         try:
-            parsed = extract_json_from_ai_response(raw_answer)
+            parsed = safe_extract_json(raw_answer)
 
             return {
                 "ai_score": normalize_score(parsed.get("ai_score")),
@@ -314,6 +292,7 @@ PDF Context:
             status_code=500,
             detail=f"Groq practice test evaluation error: {str(error)}",
         )
+
 
 
 async def serialize_practice_test(test: dict) -> dict:
@@ -882,39 +861,71 @@ async def submit_practice_test(
     total_score = 0
     topic_scores: dict[str, list[int]] = {}
 
-    for index, question in enumerate(questions):
-        student_answer = str(question.get("student_answer", "")).strip()
-        topic_tag = safe_topic(question.get("topic_tag"))
-        difficulty = safe_difficulty(question.get("difficulty"))
+    sem = asyncio.Semaphore(4)
+
+    async def eval_single_question(q_idx: int, q_data: dict):
+        student_answer = str(q_data.get("student_answer", "")).strip()
+        topic_tag = safe_topic(q_data.get("topic_tag"))
+        difficulty = safe_difficulty(q_data.get("difficulty"))
 
         if not student_answer:
-            questions[index]["ai_score"] = 0
-            questions[index]["ai_feedback"] = "No answer written for this question."
-            questions[index]["strengths"] = []
-            questions[index]["missing_points"] = ["Answer was not attempted."]
-            questions[index]["model_answer"] = ""
-            questions[index]["evaluated_at"] = current_time
+            return (
+                q_idx,
+                topic_tag,
+                0,
+                {
+                    "ai_score": 0,
+                    "ai_feedback": "No answer written for this question.",
+                    "strengths": [],
+                    "missing_points": ["Answer was not attempted."],
+                    "model_answer": "",
+                    "evaluated_at": current_time,
+                },
+            )
 
-            topic_scores.setdefault(topic_tag, []).append(0)
-            continue
+        async with sem:
+            try:
+                evaluation = await evaluate_practice_answer_with_groq(
+                    question_text=str(q_data.get("question", "")),
+                    student_answer=student_answer,
+                    pdf_context=pdf_context,
+                    topic_tag=topic_tag,
+                    difficulty=difficulty,
+                )
+                score = int(evaluation.get("ai_score", 0) or 0)
+                return (
+                    q_idx,
+                    topic_tag,
+                    score,
+                    {
+                        "ai_score": score,
+                        "ai_feedback": evaluation.get("ai_feedback", ""),
+                        "strengths": evaluation.get("strengths", []),
+                        "missing_points": evaluation.get("missing_points", []),
+                        "model_answer": evaluation.get("model_answer", ""),
+                        "evaluated_at": current_time,
+                    },
+                )
+            except Exception as e:
+                return (
+                    q_idx,
+                    topic_tag,
+                    0,
+                    {
+                        "ai_score": 0,
+                        "ai_feedback": f"Evaluation fallback: {str(e)}",
+                        "strengths": [],
+                        "missing_points": [],
+                        "model_answer": "",
+                        "evaluated_at": current_time,
+                    },
+                )
 
-        evaluation = await evaluate_practice_answer_with_groq(
-            question_text=str(question.get("question", "")),
-            student_answer=student_answer,
-            pdf_context=pdf_context,
-            topic_tag=topic_tag,
-            difficulty=difficulty,
-        )
+    eval_tasks = [eval_single_question(idx, q) for idx, q in enumerate(questions)]
+    eval_results = await asyncio.gather(*eval_tasks)
 
-        score = int(evaluation.get("ai_score", 0) or 0)
-
-        questions[index]["ai_score"] = score
-        questions[index]["ai_feedback"] = evaluation.get("ai_feedback", "")
-        questions[index]["strengths"] = evaluation.get("strengths", [])
-        questions[index]["missing_points"] = evaluation.get("missing_points", [])
-        questions[index]["model_answer"] = evaluation.get("model_answer", "")
-        questions[index]["evaluated_at"] = current_time
-
+    for q_idx, topic_tag, score, eval_data in eval_results:
+        questions[q_idx].update(eval_data)
         total_score += score
         topic_scores.setdefault(topic_tag, []).append(score)
 

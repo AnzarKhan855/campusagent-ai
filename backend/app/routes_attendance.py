@@ -28,9 +28,14 @@ def calculate_attendance_stats(
     required_percentage: float
 ) -> dict:
     if total_classes <= 0:
-        current_percentage = 0
-    else:
-        current_percentage = round((attended_classes / total_classes) * 100, 2)
+        return {
+            "current_percentage": 0.0,
+            "risk_status": "neutral",
+            "classes_can_miss": 0,
+            "classes_needed": 0
+        }
+
+    current_percentage = round((attended_classes / total_classes) * 100, 2)
 
     if current_percentage >= required_percentage + 10:
         risk_status = "safe"
@@ -184,6 +189,9 @@ async def get_attendance_records(
 ):
     user_id = get_user_id(current_user)
 
+    user_subjects = await subjects_collection.find({"user_id": user_id}).to_list(length=200)
+    subject_map = {str(s["_id"]): s.get("name", "Unknown Subject") for s in user_subjects}
+
     attendance_cursor = attendance_collection.find({
         "user_id": user_id
     }).sort("created_at", -1)
@@ -191,17 +199,7 @@ async def get_attendance_records(
     attendance_records = []
 
     async for attendance in attendance_cursor:
-        subject_name = "Unknown Subject"
-
-        if ObjectId.is_valid(attendance["subject_id"]):
-            subject = await subjects_collection.find_one({
-                "_id": ObjectId(attendance["subject_id"]),
-                "user_id": user_id
-            })
-
-            if subject:
-                subject_name = subject["name"]
-
+        subject_name = subject_map.get(str(attendance.get("subject_id")), "Unknown Subject")
         attendance_records.append(
             serialize_attendance(attendance, subject_name)
         )

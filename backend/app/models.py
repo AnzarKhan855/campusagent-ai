@@ -1,11 +1,11 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 
 
 class UserSignup(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1, max_length=100)
     email: EmailStr
-    password: str
+    password: str = Field(..., min_length=8, max_length=128)
     role: Optional[str] = "student"
 
 
@@ -21,14 +21,21 @@ class TokenResponse(BaseModel):
 
 
 class SubjectCreate(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1, max_length=100)
     code: Optional[str] = None
     teacher: Optional[str] = None
     color: Optional[str] = "blue"
 
 
+class SubjectUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    code: Optional[str] = None
+    teacher: Optional[str] = None
+    color: Optional[str] = None
+
+
 class AssignmentCreate(BaseModel):
-    title: str
+    title: str = Field(..., min_length=1, max_length=200)
     subject_id: str
     description: Optional[str] = ""
     due_date: str
@@ -36,7 +43,8 @@ class AssignmentCreate(BaseModel):
     status: Optional[str] = "pending"
     details: Optional[str] = ""
     pdf_filename: Optional[str] = ""
-pdf_text: Optional[str] = ""
+    pdf_text: Optional[str] = ""
+
 
 
 class AttendanceCreate(BaseModel):

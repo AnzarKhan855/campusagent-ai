@@ -4,9 +4,9 @@ from typing import Optional
 
 from dotenv import load_dotenv
 from fastapi import HTTPException, UploadFile
-from groq import Groq
 from pdfminer.high_level import extract_text
 
+from app.ai_config import generate_chat_completion
 from app.rag.chunker import chunk_text
 from app.rag.embeddings import get_embeddings, get_single_embedding
 from app.rag.pdf_library_service import create_rag_document
@@ -15,14 +15,8 @@ from app.rag.vector_store import add_chunks_to_qdrant, search_similar_chunks
 
 load_dotenv()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
-
-if not GROQ_API_KEY:
-    raise RuntimeError("GROQ_API_KEY is missing in .env or Render environment")
-
-groq_client = Groq(api_key=GROQ_API_KEY)
-
 QDRANT_COLLECTION_NAME = "campusagent_rag"
+
 
 
 async def upload_pdf_to_rag(file: UploadFile, user_id: str):
@@ -167,8 +161,7 @@ PDF Context:
 {context}
 """
 
-        response = groq_client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+        answer = await generate_chat_completion(
             messages=[
                 {
                     "role": "system",
@@ -181,8 +174,6 @@ PDF Context:
             ],
             temperature=0.2,
         )
-
-        answer = response.choices[0].message.content
 
         return {
             "success": True,

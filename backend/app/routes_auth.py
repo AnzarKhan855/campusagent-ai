@@ -20,14 +20,27 @@ async def signup(user: UserSignup):
             detail="Email already registered"
         )
 
-    user_id = user.email.lower()
+    name = user.name.strip()
+    if not name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Name cannot be empty",
+        )
+
+    if not user.password or not user.password.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password cannot be whitespace only",
+        )
+
+    user_id = user.email.lower().strip()
 
     new_user = {
         "_id": user_id,
-        "name": user.name,
-        "email": user.email.lower(),
+        "name": name,
+        "email": user_id,
         "hashed_password": hash_password(user.password),
-        "role": user.role,
+        "role": "student",  # Force student role to prevent privilege escalation
         "created_at": datetime.now(timezone.utc),
         "is_active": True
     }

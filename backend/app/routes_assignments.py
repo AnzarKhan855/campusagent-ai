@@ -16,10 +16,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 
-try:
-    from groq import AsyncGroq
-except Exception:
-    AsyncGroq = None
+from app.ai_config import generate_chat_completion, safe_extract_json
 
 from app.auth import get_current_user
 from app.database import database
@@ -403,23 +400,6 @@ async def evaluate_answer_with_groq(
     student_answer: str,
     pdf_context: str = ""
 ) -> dict:
-    if AsyncGroq is None:
-        raise HTTPException(
-            status_code=500,
-            detail="Groq package is not installed. Run: pip install groq"
-        )
-
-    api_key = os.getenv("GROQ_API_KEY", "").strip()
-
-    if not api_key:
-        raise HTTPException(
-            status_code=500,
-            detail="GROQ_API_KEY is missing in backend .env file"
-        )
-
-    model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant").strip()
-    client = AsyncGroq(api_key=api_key)
-
     system_prompt = """
 You are CampusAgent AI, an academic answer evaluator for B.Tech students.
 
@@ -452,8 +432,7 @@ PDF Context:
 """
 
     try:
-        completion = await client.chat.completions.create(
-            model=model,
+        raw_answer = await generate_chat_completion(
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -462,10 +441,8 @@ PDF Context:
             max_tokens=900
         )
 
-        raw_answer = completion.choices[0].message.content or ""
-
         try:
-            parsed = extract_json_from_ai_response(raw_answer)
+            parsed = safe_extract_json(raw_answer)
 
             return {
                 "ai_score": normalize_score(parsed.get("ai_score")),
@@ -484,9 +461,11 @@ PDF Context:
                 "improved_answer": ""
             }
 
+    except HTTPException:
+        raise
     except Exception as error:
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Groq AI evaluation error: {str(error)}"
         )
 
@@ -496,23 +475,6 @@ async def generate_ai_answer_with_groq(
     pdf_context: str = "",
     difficulty: str = "medium"
 ) -> str:
-    if AsyncGroq is None:
-        raise HTTPException(
-            status_code=500,
-            detail="Groq package is not installed. Run: pip install groq"
-        )
-
-    api_key = os.getenv("GROQ_API_KEY", "").strip()
-
-    if not api_key:
-        raise HTTPException(
-            status_code=500,
-            detail="GROQ_API_KEY is missing in backend .env file"
-        )
-
-    model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant").strip()
-    client = AsyncGroq(api_key=api_key)
-
     system_prompt = """
 You are CampusAgent AI, an academic answer generator for B.Tech students.
 
@@ -541,8 +503,7 @@ Generate the best possible academic answer.
 """
 
     try:
-        completion = await client.chat.completions.create(
-            model=model,
+        cleaned_answer = await generate_chat_completion(
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -551,12 +512,9 @@ Generate the best possible academic answer.
             max_tokens=900
         )
 
-        answer = completion.choices[0].message.content or ""
-        cleaned_answer = answer.strip()
-
         if not cleaned_answer:
             raise HTTPException(
-                status_code=500,
+                status_code=status.HTTP_502_BAD_GATEWAY,
                 detail="AI generated an empty answer"
             )
 
@@ -564,10 +522,9 @@ Generate the best possible academic answer.
 
     except HTTPException:
         raise
-
     except Exception as error:
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Groq AI answer generation error: {str(error)}"
         )
 
@@ -576,23 +533,6 @@ async def auto_tag_questions_with_groq(
     questions_for_tagging: list[dict],
     pdf_context: str = ""
 ) -> list[dict]:
-    if AsyncGroq is None:
-        raise HTTPException(
-            status_code=500,
-            detail="Groq package is not installed. Run: pip install groq"
-        )
-
-    api_key = os.getenv("GROQ_API_KEY", "").strip()
-
-    if not api_key:
-        raise HTTPException(
-            status_code=500,
-            detail="GROQ_API_KEY is missing in backend .env file"
-        )
-
-    model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant").strip()
-    client = AsyncGroq(api_key=api_key)
-
     compact_questions = []
 
     for item in questions_for_tagging:
@@ -630,8 +570,7 @@ Questions:
 """
 
     try:
-        completion = await client.chat.completions.create(
-            model=model,
+        raw_answer = await generate_chat_completion(
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -639,16 +578,13 @@ Questions:
             temperature=0.1,
             max_tokens=1200
         )
-
-        raw_answer = completion.choices[0].message.content or ""
         return extract_tags_from_ai_response(raw_answer)
 
     except HTTPException:
         raise
-
     except Exception as error:
         raise HTTPException(
-            status_code=500,
+            status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Groq AI auto-tagging error: {str(error)}"
         )
 
@@ -1470,7 +1406,7 @@ async def update_question_difficulty(
 @router.patch("/{assignment_id}/questions/auto-tag")
 async def auto_tag_assignment_questions(
     assignment_id: str,
-    auto_tag_request: QuestionAutoTagRequest,
+    auto_tag_request: Optional[QuestionAutoTagRequest] = None,
     current_user: dict = Depends(get_current_user)
 ):
     user_id = get_user_id(current_user)
@@ -1500,7 +1436,7 @@ async def auto_tag_assignment_questions(
             detail="No extracted questions found. Please extract questions first."
         )
 
-    requested_limit = auto_tag_request.limit or 12
+    requested_limit = (auto_tag_request.limit if auto_tag_request else 12) or 12
     requested_limit = max(1, min(int(requested_limit), len(questions), 12))
 
     questions_for_tagging = []
@@ -1541,19 +1477,9 @@ async def auto_tag_assignment_questions(
             questions_for_tagging=questions_for_tagging,
             pdf_context=""
         )
-    except HTTPException as error:
-        error_text = str(error.detail).lower()
-
-        if (
-            "rate_limit" in error_text
-            or "request too large" in error_text
-            or "tokens" in error_text
-            or "413" in error_text
-        ):
-            # Fallback keeps the feature working even if Groq token/TPM limit is hit.
-            ai_tags = []
-        else:
-            raise
+    except Exception:
+        # Fallback keeps auto-tagging functional even if AI provider is temporarily unavailable
+        ai_tags = []
 
     tags_by_index = {
         tag["question_index"]: tag

@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime, date, timezone
 from pathlib import Path
 from typing import Any, Optional
@@ -9,10 +10,7 @@ from pydantic import BaseModel
 
 from app.auth import get_current_user
 
-try:
-    from groq import AsyncGroq
-except ImportError:
-    AsyncGroq = None
+from app.ai_config import generate_chat_completion
 
 try:
     from app.database import database as db
@@ -412,23 +410,6 @@ async def run_groq_agent(
     attendance_records: list,
     subjects_map: dict,
 ):
-    if AsyncGroq is None:
-        raise HTTPException(
-            status_code=500,
-            detail="Groq package is not installed. Run: pip install groq",
-        )
-
-    api_key = os.getenv("GROQ_API_KEY", "").strip()
-
-    if not api_key:
-        raise HTTPException(
-            status_code=500,
-            detail="GROQ_API_KEY is missing in backend environment variables",
-        )
-
-    model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant").strip()
-    client = AsyncGroq(api_key=api_key)
-
     student_context = build_student_context(
         subjects,
         assignments,
@@ -481,17 +462,14 @@ Response style:
 """
 
     try:
-        completion = await client.chat.completions.create(
-            model=model,
+        answer = await generate_chat_completion(
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": command},
             ],
             temperature=0.3,
-            max_tokens=700,
+            max_tokens=800,
         )
-
-        answer = completion.choices[0].message.content
 
         return {
             "success": True,
@@ -500,8 +478,13 @@ Response style:
             "answer": answer,
         }
 
+    except HTTPException:
+        raise
     except Exception as error:
-        raise HTTPException(status_code=500, detail=f"Groq AI error: {str(error)}")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Groq AI error: {str(error)}"
+        )
 
 
 @router.post("/command")
@@ -516,27 +499,138 @@ async def run_ai_command(
     if not original_command:
         raise HTTPException(status_code=400, detail="Command is required")
 
+    # Safety Guardrails against destructive / mass actions
+    destructive_keywords = [
+        "delete all", "drop table", "drop database", "delete someone else",
+        "delete every", "remove all", "wipe database", "truncate"
+    ]
+    if any(keyword in command for keyword in destructive_keywords):
+        return {
+            "success": False,
+            "agent_type": "security_guardrail",
+            "command": request.command,
+            "answer": "⚠️ For security and data safety, bulk deletion and destructive administrative operations are strictly disabled in AI commands. Please manage your items individually through their respective dashboard panels."
+        }
+
     subjects, assignments, attendance_records, subjects_map = await fetch_student_data(
         user_id
     )
 
+    # Tool Action 1: Add/Create Subject
+    add_subject_match = re.search(r"(?:add|create)\s+(?:a\s+)?subject(?:\s+called)?\s+([a-zA-Z0-9\s+.#-]+)", command)
+    if add_subject_match:
+        subject_name = add_subject_match.group(1).strip()
+        # Clean up punctuation like quotes or trailing words
+        subject_name = subject_name.replace('"', '').replace("'", "").strip()
+        if subject_name and len(subject_name) <= 100:
+            # Check duplicate
+            existing = await db.subjects.find_one({
+                "user_id": user_id,
+                "name": {"$regex": f"^{re.escape(subject_name)}$", "$options": "i"}
+            })
+            if existing:
+                return {
+                    "success": True,
+                    "agent_type": "tool_subject_create",
+                    "command": request.command,
+                    "answer": f"ℹ️ Subject **{existing.get('name', subject_name)}** already exists in your subjects list."
+                }
+            
+            now = datetime.now(timezone.utc)
+            new_sub = {
+                "user_id": user_id,
+                "name": subject_name,
+                "code": None,
+                "teacher": None,
+                "color": "blue",
+                "created_at": now,
+                "updated_at": now
+            }
+            res = await db.subjects.insert_one(new_sub)
+            return {
+                "success": True,
+                "agent_type": "tool_subject_create",
+                "command": request.command,
+                "answer": f"✅ Successfully created new subject **{subject_name}** in your academic workspace.",
+                "subject_id": str(res.inserted_id)
+            }
+
+    # Tool Action 2: Show Pending Assignments / Due This Week
+    if "pending assignment" in command or "assignments due" in command or "what is due" in command:
+        today = date.today()
+        pending = [
+            a for a in assignments
+            if str(a.get("status", "pending")).lower() != "completed"
+        ]
+        if not pending:
+            return {
+                "success": True,
+                "agent_type": "tool_assignments_query",
+                "command": request.command,
+                "answer": "🎉 You have no pending assignments! All your assignments are currently marked as completed."
+            }
+        
+        lines = ["Here are your pending assignments:\n"]
+        for a in pending:
+            sub = get_assignment_subject(a, subjects_map)
+            due = format_due_date(a.get("due_date"))
+            prio = a.get("priority", "medium").upper()
+            lines.append(f"- **{a.get('title', 'Untitled')}** ({sub}) — Due: {due} | Priority: {prio}")
+        
+        return {
+            "success": True,
+            "agent_type": "tool_assignments_query",
+            "command": request.command,
+            "answer": "\n".join(lines)
+        }
+
+    # Tool Action 3: Lowest Attendance Subject
+    if "lowest attendance" in command or "worst attendance" in command:
+        if not attendance_records:
+            return {
+                "success": True,
+                "agent_type": "tool_attendance_query",
+                "command": request.command,
+                "answer": "You don't have any attendance records logged yet. Add your subjects to the Attendance tab to track your status."
+            }
+        
+        records_with_pct = []
+        for r in attendance_records:
+            held = get_classes_held(r)
+            att = get_classes_attended(r)
+            pct = calculate_attendance_percentage(held, att)
+            records_with_pct.append((pct, r))
+        
+        records_with_pct.sort(key=lambda x: x[0])
+        lowest_pct, lowest_rec = records_with_pct[0]
+        sub_name = get_attendance_subject(lowest_rec, subjects_map)
+        req_pct = safe_float(lowest_rec.get("required_percentage"), 75.0)
+        
+        status_msg = "🚨 In Danger Zone" if lowest_pct < req_pct else "✅ Safe"
+        return {
+            "success": True,
+            "agent_type": "tool_attendance_query",
+            "command": request.command,
+            "answer": (
+                f"**Lowest Attendance Subject:** {sub_name}\n"
+                f"- Current Attendance: **{lowest_pct}%** (Required: {req_pct}%)\n"
+                f"- Classes Attended: {get_classes_attended(lowest_rec)} / {get_classes_held(lowest_rec)}\n"
+                f"- Status: {status_msg}\n\n"
+                f"**Advice:** Attend all upcoming {sub_name} classes to improve your percentage."
+            )
+        }
+
+    # Rule-Based Plan Commands
     plan_commands = [
-        "plan my day",
-        "plan today",
-        "today plan",
-        "make my day plan",
-        "make a plan for today",
+        "plan my day", "plan today", "today plan", "make my day plan",
+        "make a plan for today", "study plan for today", "give me a study plan"
     ]
-
     attendance_commands = [
-        "check my attendance",
-        "check my attendance risk",
-        "attendance risk",
-        "show attendance",
-        "my attendance",
+        "check my attendance", "check my attendance risk", "attendance risk",
+        "show attendance", "my attendance"
     ]
 
-    if command in plan_commands or command in attendance_commands:
+    if any(pc in command for pc in plan_commands) or any(ac in command for ac in attendance_commands):
         rule_based_result = build_rule_based_plan(
             subjects,
             assignments,
@@ -545,10 +639,11 @@ async def run_ai_command(
         )
         return {**rule_based_result, "command": request.command}
 
+    # General Academic AI queries -> execute Groq agent with complete context
     return await run_groq_agent(
         original_command,
         subjects,
         assignments,
         attendance_records,
         subjects_map,
-    )
+    )

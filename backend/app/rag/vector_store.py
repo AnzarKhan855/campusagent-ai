@@ -1,3 +1,6 @@
+import os
+import uuid
+from typing import List, Optional
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
@@ -7,28 +10,36 @@ from qdrant_client.models import (
     FieldCondition,
     MatchValue,
 )
-from typing import List, Optional
-import uuid
 
 
 QDRANT_PATH = "qdrant_storage"
 COLLECTION_NAME = "campusagent_rag"
 
-client = QdrantClient(path=QDRANT_PATH)
+qdrant_url = os.getenv("QDRANT_URL", "").strip()
+qdrant_api_key = os.getenv("QDRANT_API_KEY", "").strip()
+
+if qdrant_url:
+    client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key or None)
+else:
+    client = QdrantClient(path=QDRANT_PATH)
 
 
 def ensure_collection(vector_size: int = 384):
-    collections = client.get_collections().collections
-    collection_names = [collection.name for collection in collections]
+    try:
+        collections = client.get_collections().collections
+        collection_names = [collection.name for collection in collections]
 
-    if COLLECTION_NAME not in collection_names:
-        client.create_collection(
-            collection_name=COLLECTION_NAME,
-            vectors_config=VectorParams(
-                size=vector_size,
-                distance=Distance.COSINE,
-            ),
-        )
+        if COLLECTION_NAME not in collection_names:
+            client.create_collection(
+                collection_name=COLLECTION_NAME,
+                vectors_config=VectorParams(
+                    size=vector_size,
+                    distance=Distance.COSINE,
+                ),
+            )
+    except Exception:
+        pass
+
 
 
 def add_chunks_to_qdrant(
@@ -73,6 +84,7 @@ def search_similar_chunks(
     document_id: Optional[str] = None,
     limit: int = 5,
 ):
+    ensure_collection()
     must_conditions = [
         FieldCondition(
             key="user_id",
@@ -90,17 +102,20 @@ def search_similar_chunks(
 
     search_filter = Filter(must=must_conditions)
 
-    results = client.query_points(
-        collection_name=COLLECTION_NAME,
-        query=query_embedding,
-        query_filter=search_filter,
-        limit=limit,
-    )
-
-    return results.points
+    try:
+        results = client.query_points(
+            collection_name=COLLECTION_NAME,
+            query=query_embedding,
+            query_filter=search_filter,
+            limit=limit,
+        )
+        return results.points
+    except Exception:
+        return []
 
 
 def delete_document_vectors(user_id: str, document_id: str):
+    ensure_collection()
     delete_filter = Filter(
         must=[
             FieldCondition(
@@ -114,9 +129,12 @@ def delete_document_vectors(user_id: str, document_id: str):
         ]
     )
 
-    client.delete(
-        collection_name=COLLECTION_NAME,
-        points_selector=delete_filter,
-    )
+    try:
+        client.delete(
+            collection_name=COLLECTION_NAME,
+            points_selector=delete_filter,
+        )
+    except Exception:
+        pass
 
-    return True
+    return True
