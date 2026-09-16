@@ -16,10 +16,20 @@ if not DATABASE_NAME:
 client = AsyncIOMotorClient(MONGODB_URL)
 database = client[DATABASE_NAME]
 
+# ==========================================
+# Active Production Collections
+# ==========================================
 users_collection = database["users"]
 subjects_collection = database["subjects"]
 assignments_collection = database["assignments"]
 attendance_collection = database["attendance"]
+practice_tests_collection = database["practice_tests"]
+rag_documents_collection = database["rag_documents"]
+
+# ==========================================
+# Roadmap / Reserved Placeholders
+# (Retained for backwards-compatibility; no active endpoints)
+# ==========================================
 notes_collection = database["notes"]
 study_plans_collection = database["study_plans"]
 tasks_collection = database["tasks"]

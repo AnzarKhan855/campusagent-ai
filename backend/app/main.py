@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -49,10 +50,24 @@ def home():
 
 
 @app.get("/health")
-def health_check():
+async def health_check():
+    db_status = "connected"
+    try:
+        await database.command("ping")
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+
+    qdrant_url = os.getenv("QDRANT_URL", "").strip()
+    vector_mode = "remote_qdrant_cloud" if qdrant_url else "local_embedded"
+
+    is_healthy = db_status == "connected"
+
     return {
-        "status": "ok",
-        "service": "CampusAgent AI Backend"
+        "status": "healthy" if is_healthy else "degraded",
+        "service": "CampusAgent AI Backend",
+        "database": db_status,
+        "vector_store": vector_mode,
+        "version": "1.0.0"
     }
 
 

@@ -1,3 +1,4 @@
+import logging
 import os
 import uuid
 from typing import List, Optional
@@ -11,6 +12,7 @@ from qdrant_client.models import (
     MatchValue,
 )
 
+logger = logging.getLogger(__name__)
 
 QDRANT_PATH = "qdrant_storage"
 COLLECTION_NAME = "campusagent_rag"
@@ -19,8 +21,14 @@ qdrant_url = os.getenv("QDRANT_URL", "").strip()
 qdrant_api_key = os.getenv("QDRANT_API_KEY", "").strip()
 
 if qdrant_url:
+    logger.info(f"Connecting to remote Qdrant cluster at {qdrant_url}")
     client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key or None)
 else:
+    logger.warning(
+        "QDRANT_URL is not set. Operating in local embedded mode ('qdrant_storage'). "
+        "NOTE: In ephemeral container environments (e.g. Render/Heroku), vector embeddings will not persist across dyno restarts. "
+        "For production persistence, set QDRANT_URL and QDRANT_API_KEY."
+    )
     client = QdrantClient(path=QDRANT_PATH)
 
 
@@ -30,6 +38,7 @@ def ensure_collection(vector_size: int = 384):
         collection_names = [collection.name for collection in collections]
 
         if COLLECTION_NAME not in collection_names:
+            logger.info(f"Creating Qdrant collection '{COLLECTION_NAME}' (dim={vector_size}, distance=COSINE)")
             client.create_collection(
                 collection_name=COLLECTION_NAME,
                 vectors_config=VectorParams(
@@ -37,9 +46,9 @@ def ensure_collection(vector_size: int = 384):
                     distance=Distance.COSINE,
                 ),
             )
-    except Exception:
-        pass
-
+    except Exception as error:
+        logger.error(f"Failed to ensure Qdrant collection '{COLLECTION_NAME}': {error}", exc_info=True)
+        raise RuntimeError(f"Vector store collection initialization failed: {str(error)}") from error
 
 
 def add_chunks_to_qdrant(
@@ -70,10 +79,14 @@ def add_chunks_to_qdrant(
             )
         )
 
-    client.upsert(
-        collection_name=COLLECTION_NAME,
-        points=points,
-    )
+    try:
+        client.upsert(
+            collection_name=COLLECTION_NAME,
+            points=points,
+        )
+    except Exception as error:
+        logger.error(f"Failed to upsert points into collection '{COLLECTION_NAME}': {error}", exc_info=True)
+        raise RuntimeError(f"Vector upsert failed: {str(error)}") from error
 
     return len(points)
 
@@ -110,8 +123,9 @@ def search_similar_chunks(
             limit=limit,
         )
         return results.points
-    except Exception:
-        return []
+    except Exception as error:
+        logger.error(f"Qdrant search_similar_chunks failed: {error}", exc_info=True)
+        raise RuntimeError(f"Vector search failed: {str(error)}") from error
 
 
 def delete_document_vectors(user_id: str, document_id: str):
@@ -134,7 +148,8 @@ def delete_document_vectors(user_id: str, document_id: str):
             collection_name=COLLECTION_NAME,
             points_selector=delete_filter,
         )
-    except Exception:
-        pass
+    except Exception as error:
+        logger.error(f"Failed to delete document vectors from Qdrant: {error}", exc_info=True)
+        raise RuntimeError(f"Failed to delete document vectors: {str(error)}") from error
 
     return True

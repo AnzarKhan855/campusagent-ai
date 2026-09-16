@@ -1,3 +1,4 @@
+import io
 import os
 from pathlib import Path
 from typing import Optional
@@ -9,25 +10,21 @@ from pdfminer.high_level import extract_text
 from app.ai_config import generate_chat_completion
 from app.rag.chunker import chunk_text
 from app.rag.embeddings import get_embeddings, get_single_embedding
-from app.rag.pdf_library_service import create_rag_document
+from app.rag.pdf_library_service import create_rag_document, get_rag_document_by_id
 from app.rag.vector_store import add_chunks_to_qdrant, search_similar_chunks
 
 
 load_dotenv()
 
 QDRANT_COLLECTION_NAME = "campusagent_rag"
-
+MAX_PDF_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
 async def upload_pdf_to_rag(file: UploadFile, user_id: str):
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed")
 
-    upload_dir = Path("uploaded_rag_pdfs")
-    upload_dir.mkdir(parents=True, exist_ok=True)
-
     safe_filename = Path(file.filename).name
-    file_path = upload_dir / safe_filename
 
     try:
         file_bytes = await file.read()
@@ -35,15 +32,24 @@ async def upload_pdf_to_rag(file: UploadFile, user_id: str):
         if not file_bytes:
             raise HTTPException(status_code=400, detail="Uploaded PDF is empty")
 
-        with open(file_path, "wb") as buffer:
-            buffer.write(file_bytes)
+        if len(file_bytes) > MAX_PDF_FILE_SIZE:
+            raise HTTPException(
+                status_code=400,
+                detail="PDF too large. Please upload a file smaller than 10 MB."
+            )
 
-        extracted_text = extract_text(str(file_path))
+        try:
+            extracted_text = extract_text(io.BytesIO(file_bytes))
+        except Exception as parse_error:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Could not parse PDF: {str(parse_error)}"
+            )
 
         if not extracted_text or len(extracted_text.strip()) < 50:
             raise HTTPException(
                 status_code=400,
-                detail="Could not extract enough text from PDF",
+                detail="Could not extract enough text from PDF (minimum 50 characters required). Scanned or image-only PDFs are not supported.",
             )
 
         chunks = chunk_text(extracted_text)
@@ -102,6 +108,9 @@ async def ask_rag_question(
 ):
     if not question or not question.strip():
         raise HTTPException(status_code=400, detail="Question is required")
+
+    if document_id:
+        await get_rag_document_by_id(document_id=document_id, user_id=user_id)
 
     try:
         query_embedding = await get_single_embedding(question)
