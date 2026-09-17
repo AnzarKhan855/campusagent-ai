@@ -1,319 +1,85 @@
-# 🎓 CampusAgent AI
+# CampusAgent AI — Frontend Web Application
 
-> **AI-Powered Student Productivity Platform built with Next.js,
-> FastAPI, Groq LLM, Hugging Face Embeddings, Qdrant Vector Database and
-> Retrieval-Augmented Generation (RAG).**
+> Next.js 16 (App Router), React 19, TypeScript, and Tailwind CSS v4 client interface for the CampusAgent AI platform.
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.138-009688?logo=fastapi)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
-![Python](https://img.shields.io/badge/Python-3-yellow?logo=python)
-![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green?logo=mongodb)
-![Groq](https://img.shields.io/badge/Groq-LLM-orange)
-![Qdrant](https://img.shields.io/badge/Qdrant-VectorDB-red)
-![RAG](https://img.shields.io/badge/RAG-Enabled-success)
+For the full product architecture, backend API documentation, and RAG pipeline deep dive, refer to the [Root Repository README](../README.md).
 
-------------------------------------------------------------------------
+---
 
-# 🌐 Live Demo
+## Tech Stack & Libraries
 
-**Frontend:** https://campusagent-ai.vercel.app
+- **Framework**: Next.js `16.2.9` (Turbopack, App Router)
+- **Runtime & Language**: React `19.2.4`, TypeScript `^5`
+- **Styling**: Tailwind CSS `^4` (`@tailwindcss/postcss`)
+- **Data Visualization**: Recharts `^3.9.0` (Radar & Bar charts for attendance & weak topics)
+- **Icons**: Lucide React `^1.21.0`
+- **Error Handling**: Custom safe serializer (`src/lib/error.ts`) preventing 422 array crashes
 
-**Login:** https://campusagent-ai.vercel.app/login
+---
 
-**Backend API:** https://campusagent-ai-backend.onrender.com
+## Directory Structure
 
-**Swagger:** https://campusagent-ai-backend.onrender.com/docs
-
-**GitHub:** https://github.com/AnzarKhan855/campusagent-ai
-
-------------------------------------------------------------------------
-
-# 📖 Overview
-
-CampusAgent AI is a production-style full-stack academic platform that
-combines modern web technologies with AI to help students manage their
-complete study workflow.
-
-It enables students to manage subjects, assignments, attendance, AI
-workspaces, practice tests, analytics, PDF libraries, and
-Retrieval-Augmented Generation (RAG) based document chat in one unified
-application.
-
-------------------------------------------------------------------------
-
-# ✨ Features
-
-## Authentication
-
--   JWT Login & Signup
--   Protected Routes
--   Secure Sessions
-
-## Dashboard
-
--   Academic overview
--   Quick statistics
--   Navigation hub
-
-## Subjects
-
--   Create / Update / Delete
--   Organize courses
-
-## Assignments
-
--   CRUD operations
--   Priority & due dates
--   Assignment workspace
--   PDF upload
-
-## Attendance
-
--   Subject-wise tracking
--   Attendance analytics
--   Risk monitoring
-
-## AI Command Center
-
--   AI productivity assistant
--   Academic planning
--   Study guidance
-
-## AI Workspace
-
--   AI answer generation
--   Rich answer editor
--   Regeneration
-
-## Practice Tests
-
--   Generate tests
--   Save answers
--   AI evaluation
--   Performance analysis
-
-## Analytics
-
--   Charts
--   Progress tracking
--   Weak topic visualization
-
-## PDF Library
-
--   Upload PDFs
--   Rename
--   Delete
--   Manage documents
-
-## AI PDF Chat (RAG)
-
--   Chat with a selected PDF
--   Semantic search
--   Context-aware responses
--   Source references
-
-------------------------------------------------------------------------
-
-# 🤖 AI Stack
-
--   Groq LLM
--   Hugging Face Embeddings API
--   Qdrant Vector Database
--   Retrieval-Augmented Generation (RAG)
--   Semantic Search
-
-------------------------------------------------------------------------
-
-# 🏗 RAG Pipeline
-
-``` text
-Upload PDF
-      │
-PDF Parsing
-      │
-Chunking
-      │
-Embedding Generation
-(Hugging Face)
-      │
-Qdrant Vector Storage
-      │
-Semantic Search
-      │
-Groq LLM
-      │
-Grounded AI Response
+```text
+frontend/
+├── src/
+│   ├── app/                               # Next.js App Router pages
+│   │   ├── page.tsx                       # Root redirect to dashboard
+│   │   ├── layout.tsx                     # Root layout & font configuration
+│   │   ├── login/page.tsx                 # Authentication: Login
+│   │   ├── signup/page.tsx                # Authentication: Registration
+│   │   ├── dashboard/page.tsx             # Academic KPI summary & quick actions
+│   │   ├── subjects/page.tsx              # Subject catalog & teacher management
+│   │   ├── assignments/
+│   │   │   ├── page.tsx                   # Assignment tracker & PDF uploader
+│   │   │   └── [id]/
+│   │   │       ├── workspace/page.tsx     # Extracted question & solution workspace
+│   │   │       ├── answer/page.tsx        # Student answer editor & AI assistance
+│   │   │       └── practice/page.tsx      # Practice test builder
+│   │   ├── attendance/page.tsx            # Attendance tracker & risk simulator
+│   │   ├── ai-command/page.tsx            # Natural language command interface
+│   │   ├── practice-tests/
+│   │   │   └── [testId]/page.tsx          # Practice exam runner with live grading
+│   │   ├── pdf-library/page.tsx           # Multi-document PDF library manager
+│   │   ├── pdf-chat/[documentId]/page.tsx # Single-document grounded RAG chat
+│   │   └── rag-chat/page.tsx              # Universal multi-document RAG workspace
+│   ├── components/                        # Modular UI panels
+│   │   ├── AssignmentsPanel.tsx           # Assignment CRUD, filter, & PDF extraction
+│   │   ├── AttendancePanel.tsx            # Attendance cards with recovery metrics
+│   │   ├── PracticeTestAnalytics.tsx      # Subject progress & weak topic charts
+│   │   └── SubjectsPanel.tsx              # Course list with color tags
+│   └── lib/
+│       └── error.ts                       # Safe error parser for FastAPI 422 arrays
+├── public/                                # Favicon & static web assets
+├── package.json
+├── tsconfig.json
+└── next.config.ts
 ```
 
-------------------------------------------------------------------------
+---
 
-# 🛠 Tech Stack
+## Local Setup
 
-  Category      Technologies
-  ------------- ------------------------------------------
-  Frontend      Next.js, React, TypeScript, Tailwind CSS
-  Backend       FastAPI, Python
-  Database      MongoDB Atlas
-  AI            Groq
-  Embeddings    Hugging Face API
-  Vector DB     Qdrant
-  Charts        Recharts
-  PDF Parsing   pdfminer.six, PyMuPDF
-  Deployment    Vercel, Render
-
-------------------------------------------------------------------------
-
-# 📸 Screenshots
-
-## Login
-
-![Login](screenshots/login.png)
-
-## Dashboard
-
-![Dashboard](screenshots/dashboard.png)
-
-## Assignments
-
-![Assignments](screenshots/assignment.png)
-
-## Attendance
-
-![Attendance](screenshots/attendance.png)
-
-## AI Command
-
-![AI Command](screenshots/ai-command.png)
-
-## AI Workspace
-
-![AI Workspace](screenshots/ai-workspace.png)
-
-## Answer Workspace
-
-![Answer Workspace](screenshots/answer-workspace.png)
-
-## Practice Test
-
-![Practice Test](screenshots/ai-practice-test.png)
-
-## Analytics
-
-![Analytics](screenshots/analytics.png)
-
-## PDF Library
-
-![PDF Library](screenshots/PDF-library.png)
-
-## AI PDF RAG Chat
-
-![RAG Chat](screenshots/ai-pdf-RAG.png)
-
-------------------------------------------------------------------------
-
-# 📁 Folder Structure
-
-``` text
-campusagent-ai/
-├── backend/
-├── frontend/
-├── screenshots/
-├── README.md
-└── .gitignore
-```
-
-------------------------------------------------------------------------
-
-# ⚙️ Local Setup
-
-## Clone
-
-``` bash
-git clone https://github.com/AnzarKhan855/campusagent-ai.git
-cd campusagent-ai
-```
-
-## Backend
-
-``` bash
-cd backend
-python -m venv venv
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-Create `.env`
-
-``` env
-MONGODB_URL=
-DATABASE_NAME=
-JWT_SECRET_KEY=
-GROQ_API_KEY=
-HF_TOKEN=
-```
-
-## Frontend
-
-``` bash
-cd frontend
+### 1. Install Dependencies
+```bash
 npm install
+```
+
+### 2. Configure Environment
+Create `.env.local`:
+```env
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+```
+For production testing, replace `http://127.0.0.1:8000` with your deployed backend URL.
+
+### 3. Run Development Server
+```bash
 npm run dev
 ```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-Create `.env.local`
-
-``` env
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
+### 4. Build for Production
+```bash
+npm run build
+npm start
 ```
-
-------------------------------------------------------------------------
-
-# 🚀 Deployment
-
--   Frontend: Vercel
--   Backend: Render
--   Database: MongoDB Atlas
--   Vector Database: Qdrant
-
-------------------------------------------------------------------------
-
-# 🔮 Roadmap
-
--   Streaming AI responses
--   PDF page citations
--   Chat history
--   Flashcards
--   AI study planner
--   Mobile application
-
-------------------------------------------------------------------------
-
-# 👨‍💻 Author
-
-**Anzar Khan**
-
-B.Tech Artificial Intelligence & Machine Learning
-
-GitHub: https://github.com/AnzarKhan855
-
-LinkedIn: (Add your LinkedIn profile URL)
-
-------------------------------------------------------------------------
-
-# ⭐ Why This Project
-
-CampusAgent AI demonstrates:
-
--   Full-stack development
--   REST API design
--   Authentication
--   MongoDB data modeling
--   Retrieval-Augmented Generation (RAG)
--   Vector databases
--   LLM integration
--   AI-powered academic workflows
--   Production deployment
-
-It is designed as a recruiter-ready portfolio project showcasing
-practical AI and software engineering skills.

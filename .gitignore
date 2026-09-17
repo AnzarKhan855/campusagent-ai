@@ -30,6 +30,16 @@ backend/**/*.lock
 # Python cache
 backend/__pycache__/
 backend/**/__pycache__/
+.pytest_cache/
+*.pyc
 
 # Next build
 frontend/.next/
+
+# Logs & Testing
+*.log
+coverage/
+.coverage
+
+# Tooling & Workspaces
+.kilo/
