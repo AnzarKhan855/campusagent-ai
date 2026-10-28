@@ -73,6 +73,12 @@ app.include_router(ai_router)
 app.include_router(practice_tests_router)
 app.include_router(rag_router)
 
+@app.on_event("startup")
+async def startup_event():
+    from app.database import init_db_indexes
+    await init_db_indexes()
+
+
 @app.get("/")
 def home():
     return {

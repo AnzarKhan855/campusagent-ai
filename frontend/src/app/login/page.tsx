@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { extractErrorMessage } from "@/lib/error";
+import { getApiBaseUrl } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,11 +13,7 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const API_BASE_URL = (
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    "http://127.0.0.1:8000"
-  ).replace(/\/+$/, "");
+  const API_BASE_URL = getApiBaseUrl();
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { extractErrorMessage } from "@/lib/error";
+import { getApiBaseUrl } from "@/lib/api";
 import {
   Bar,
   BarChart,
@@ -46,8 +47,7 @@ type AttendanceRecord = {
   updated_at?: string;
 };
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+const API_BASE_URL = getApiBaseUrl();
 
 export default function AttendancePanel() {
   const [subjects, setSubjects] = useState<Subject[]>([]);

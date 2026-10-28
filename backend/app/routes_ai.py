@@ -1,5 +1,6 @@
 import os
 import re
+import asyncio
 from datetime import datetime, date, timezone
 from pathlib import Path
 from typing import Any, Optional
@@ -172,10 +173,10 @@ def get_assignment_pdf_text(assignment: dict) -> str:
 
 
 async def fetch_student_data(user_id: str):
-    subjects = await db.subjects.find({"user_id": user_id}).to_list(length=None)
-    assignments = await db.assignments.find({"user_id": user_id}).to_list(length=None)
-    attendance_records = await db.attendance.find({"user_id": user_id}).to_list(
-        length=None
+    subjects, assignments, attendance_records = await asyncio.gather(
+        db.subjects.find({"user_id": user_id}).to_list(length=100),
+        db.assignments.find({"user_id": user_id}).to_list(length=100),
+        db.attendance.find({"user_id": user_id}).to_list(length=100),
     )
 
     subjects_map = {

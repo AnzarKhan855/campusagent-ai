@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, date
 from bson import ObjectId
+import asyncio
 import traceback
 
 from app.auth import get_current_user
@@ -83,17 +84,11 @@ async def get_dashboard_overview(current_user=Depends(get_current_user)):
         user_id = get_user_id(current_user)
         today = date.today()
 
-        subjects = await subjects_collection.find(
-            {"user_id": user_id}
-        ).to_list(length=None)
-
-        assignments = await assignments_collection.find(
-            {"user_id": user_id}
-        ).to_list(length=None)
-
-        attendance_records = await attendance_collection.find(
-            {"user_id": user_id}
-        ).to_list(length=None)
+        subjects, assignments, attendance_records = await asyncio.gather(
+            subjects_collection.find({"user_id": user_id}).to_list(length=100),
+            assignments_collection.find({"user_id": user_id}).to_list(length=100),
+            attendance_collection.find({"user_id": user_id}).to_list(length=100),
+        )
 
         total_subjects = len(subjects)
         total_assignments = len(assignments)

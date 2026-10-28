@@ -38,3 +38,17 @@ quizzes_collection = database["quizzes"]
 agent_actions_collection = database["agent_actions"]
 agent_memory_collection = database["agent_memory"]
 notifications_collection = database["notifications"]
+
+
+async def init_db_indexes():
+    """Ensure performant indexes on all active collections."""
+    try:
+        await users_collection.create_index("email", unique=True)
+        await subjects_collection.create_index("user_id")
+        await assignments_collection.create_index([("user_id", 1), ("due_date", 1)])
+        await attendance_collection.create_index([("user_id", 1), ("subject_id", 1)], unique=True)
+        await practice_tests_collection.create_index([("user_id", 1), ("created_at", -1)])
+        await rag_documents_collection.create_index([("user_id", 1), ("created_at", -1)])
+    except Exception:
+        # Ignore if index already exists or background conflict
+        pass

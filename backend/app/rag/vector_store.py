@@ -24,6 +24,7 @@ qdrant_api_key = os.getenv("QDRANT_API_KEY", "").strip()
 _remote_client = None
 _embedded_client = None
 _remote_failed = False
+_collection_ensured = False
 
 
 def get_embedded_client() -> QdrantClient:
@@ -34,14 +35,14 @@ def get_embedded_client() -> QdrantClient:
 
 
 def get_qdrant_client() -> QdrantClient:
-    global _remote_client, _remote_failed
+    global _remote_client, _remote_failed, _collection_ensured
     if qdrant_url and not _remote_failed:
         if _remote_client is None:
             try:
                 _remote_client = QdrantClient(
                     url=qdrant_url,
                     api_key=qdrant_api_key or None,
-                    timeout=5.0,
+                    timeout=2.0,
                 )
                 _remote_client.get_collections()
             except Exception as err:
@@ -51,6 +52,7 @@ def get_qdrant_client() -> QdrantClient:
                 )
                 _remote_failed = True
                 _remote_client = None
+                _collection_ensured = False
         if _remote_client is not None:
             return _remote_client
     return get_embedded_client()
@@ -80,8 +82,11 @@ def ping_vector_store() -> dict:
         }
 
 
-def ensure_collection(vector_size: int = 384):
-    global _remote_failed
+def ensure_collection(vector_size: int = 384, force: bool = False):
+    global _remote_failed, _collection_ensured
+    if _collection_ensured and not force:
+        return
+
     client = get_qdrant_client()
     try:
         collections = client.get_collections().collections
@@ -111,12 +116,16 @@ def ensure_collection(vector_size: int = 384):
                     )
         except Exception as idx_err:
             logger.warning(f"Could not verify/create payload index: {idx_err}")
+
+        _collection_ensured = True
     except Exception as error:
+        _collection_ensured = False
         # If remote failed, fallback and retry once on embedded
         if qdrant_url and not _remote_failed:
             logger.warning(f"Failed to ensure collection on remote ({error}), retrying on local embedded storage")
             _remote_failed = True
-            return ensure_collection(vector_size=vector_size)
+            _remote_client = None
+            return ensure_collection(vector_size=vector_size, force=True)
         logger.error(f"Failed to ensure Qdrant collection '{COLLECTION_NAME}': {error}", exc_info=True)
         raise RuntimeError(f"Vector store collection initialization failed: {str(error)}") from error
 
@@ -159,7 +168,7 @@ def add_chunks_to_qdrant(
         if qdrant_url and not _remote_failed:
             logger.warning(f"Upsert failed on remote ({error}), retrying on local embedded storage")
             _remote_failed = True
-            ensure_collection()
+            ensure_collection(force=True)
             get_embedded_client().upsert(
                 collection_name=COLLECTION_NAME,
                 points=points,
@@ -208,7 +217,7 @@ def search_similar_chunks(
         if qdrant_url and not _remote_failed:
             logger.warning(f"Vector search failed on remote ({error}), retrying on local embedded storage")
             _remote_failed = True
-            ensure_collection()
+            ensure_collection(force=True)
             results = get_embedded_client().query_points(
                 collection_name=COLLECTION_NAME,
                 query=query_embedding,
@@ -245,7 +254,7 @@ def delete_document_vectors(user_id: str, document_id: str):
         if qdrant_url and not _remote_failed:
             logger.warning(f"Vector delete failed on remote ({error}), retrying on local embedded storage")
             _remote_failed = True
-            ensure_collection()
+            ensure_collection(force=True)
             get_embedded_client().delete(
                 collection_name=COLLECTION_NAME,
                 points_selector=delete_filter,

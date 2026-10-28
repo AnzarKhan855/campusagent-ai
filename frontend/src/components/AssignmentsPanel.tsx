@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { extractErrorMessage } from "@/lib/error";
+import { getApiBaseUrl } from "@/lib/api";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -46,8 +47,7 @@ type Assignment = {
   answered_count?: number;
 };
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+const API_BASE_URL = getApiBaseUrl();
 
 export default function AssignmentsPanel() {
   const router = useRouter();

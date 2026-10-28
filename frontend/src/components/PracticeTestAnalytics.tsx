@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { extractErrorMessage } from "@/lib/error";
+import { getApiBaseUrl } from "@/lib/api";
 import {
   Bar,
   BarChart,
@@ -75,8 +76,7 @@ export default function PracticeTestAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+  const API_BASE_URL = getApiBaseUrl();
 
   const pieColors = ["#10b981", "#f59e0b", "#6366f1", "#ef4444"];
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { extractErrorMessage } from "@/lib/error";
+import { getApiBaseUrl } from "@/lib/api";
 import {
   ArrowLeft,
   FileText,
@@ -24,8 +25,7 @@ type RagDocument = {
   created_at: string;
 };
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+const API_BASE = getApiBaseUrl();
 
 export default function PdfLibraryPage() {
   const router = useRouter();

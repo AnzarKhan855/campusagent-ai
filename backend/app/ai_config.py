@@ -45,28 +45,40 @@ def get_fallback_model() -> str:
         return DEFAULT_FALLBACK_MODEL
     return configured
 
+_async_groq_client = None
+_sync_groq_client = None
+
+
 def get_async_groq_client() -> Any:
+    global _async_groq_client
     if AsyncGroq is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Groq SDK is not installed in the backend environment."
         )
-    return AsyncGroq(api_key=get_groq_api_key())
+    if _async_groq_client is None:
+        _async_groq_client = AsyncGroq(api_key=get_groq_api_key())
+    return _async_groq_client
+
 
 def get_sync_groq_client() -> Any:
+    global _sync_groq_client
     if Groq is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Groq SDK is not installed in the backend environment."
         )
-    return Groq(api_key=get_groq_api_key())
+    if _sync_groq_client is None:
+        _sync_groq_client = Groq(api_key=get_groq_api_key())
+    return _sync_groq_client
+
 
 async def generate_chat_completion(
     messages: List[Dict[str, str]],
     model: Optional[str] = None,
     temperature: float = 0.2,
     max_tokens: int = 1000,
-    timeout: float = 35.0
+    timeout: float = 15.0
 ) -> str:
     client = get_async_groq_client()
     primary = model or get_primary_model()
