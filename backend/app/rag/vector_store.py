@@ -21,28 +21,54 @@ COLLECTION_NAME = "campusagent_rag"
 qdrant_url = os.getenv("QDRANT_URL", "").strip()
 qdrant_api_key = os.getenv("QDRANT_API_KEY", "").strip()
 
-if qdrant_url:
-    logger.info(f"Connecting to remote Qdrant cluster at {qdrant_url}")
-    client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key or None)
-else:
-    logger.warning(
-        "QDRANT_URL is not set. Operating in local embedded mode ('qdrant_storage'). "
-        "NOTE: In ephemeral container environments (e.g. Render/Heroku), vector embeddings will not persist across dyno restarts. "
-        "For production persistence, set QDRANT_URL and QDRANT_API_KEY."
-    )
-    client = QdrantClient(path=QDRANT_PATH)
+_remote_client = None
+_embedded_client = None
+_remote_failed = False
+
+
+def get_embedded_client() -> QdrantClient:
+    global _embedded_client
+    if _embedded_client is None:
+        _embedded_client = QdrantClient(path=QDRANT_PATH)
+    return _embedded_client
+
+
+def get_qdrant_client() -> QdrantClient:
+    global _remote_client, _remote_failed
+    if qdrant_url and not _remote_failed:
+        if _remote_client is None:
+            try:
+                _remote_client = QdrantClient(
+                    url=qdrant_url,
+                    api_key=qdrant_api_key or None,
+                    timeout=5.0,
+                )
+                _remote_client.get_collections()
+            except Exception as err:
+                logger.warning(
+                    f"Remote Qdrant cluster unreachable ({err}). "
+                    f"Falling back to local embedded storage ('{QDRANT_PATH}')."
+                )
+                _remote_failed = True
+                _remote_client = None
+        if _remote_client is not None:
+            return _remote_client
+    return get_embedded_client()
 
 
 def ping_vector_store() -> dict:
-    mode = "remote_qdrant_cloud" if qdrant_url else "local_embedded"
+    global _remote_failed
+    client = get_qdrant_client()
+    is_fallback = bool(qdrant_url and _remote_failed)
+    mode = "local_embedded_fallback" if is_fallback else ("remote_qdrant_cloud" if qdrant_url else "local_embedded")
     try:
         collections = client.get_collections().collections
         collection_names = [c.name for c in collections]
         return {
             "mode": mode,
-            "connectivity": "connected",
+            "connectivity": "connected" if not is_fallback else "fallback_active (remote unavailable, using local embedded)",
             "collection_exists": COLLECTION_NAME in collection_names,
-            "persistent": bool(qdrant_url)
+            "persistent": bool(qdrant_url and not is_fallback)
         }
     except Exception as error:
         logger.warning(f"Vector store health ping failed: {error}")
@@ -50,11 +76,13 @@ def ping_vector_store() -> dict:
             "mode": mode,
             "connectivity": f"disconnected: {str(error)}",
             "collection_exists": False,
-            "persistent": bool(qdrant_url)
+            "persistent": False
         }
 
 
 def ensure_collection(vector_size: int = 384):
+    global _remote_failed
+    client = get_qdrant_client()
     try:
         collections = client.get_collections().collections
         collection_names = [collection.name for collection in collections]
@@ -84,6 +112,11 @@ def ensure_collection(vector_size: int = 384):
         except Exception as idx_err:
             logger.warning(f"Could not verify/create payload index: {idx_err}")
     except Exception as error:
+        # If remote failed, fallback and retry once on embedded
+        if qdrant_url and not _remote_failed:
+            logger.warning(f"Failed to ensure collection on remote ({error}), retrying on local embedded storage")
+            _remote_failed = True
+            return ensure_collection(vector_size=vector_size)
         logger.error(f"Failed to ensure Qdrant collection '{COLLECTION_NAME}': {error}", exc_info=True)
         raise RuntimeError(f"Vector store collection initialization failed: {str(error)}") from error
 
@@ -116,12 +149,22 @@ def add_chunks_to_qdrant(
             )
         )
 
+    client = get_qdrant_client()
     try:
         client.upsert(
             collection_name=COLLECTION_NAME,
             points=points,
         )
     except Exception as error:
+        if qdrant_url and not _remote_failed:
+            logger.warning(f"Upsert failed on remote ({error}), retrying on local embedded storage")
+            _remote_failed = True
+            ensure_collection()
+            get_embedded_client().upsert(
+                collection_name=COLLECTION_NAME,
+                points=points,
+            )
+            return len(points)
         logger.error(f"Failed to upsert points into collection '{COLLECTION_NAME}': {error}", exc_info=True)
         raise RuntimeError(f"Vector upsert failed: {str(error)}") from error
 
@@ -152,6 +195,7 @@ def search_similar_chunks(
 
     search_filter = Filter(must=must_conditions)
 
+    client = get_qdrant_client()
     try:
         results = client.query_points(
             collection_name=COLLECTION_NAME,
@@ -161,6 +205,17 @@ def search_similar_chunks(
         )
         return results.points
     except Exception as error:
+        if qdrant_url and not _remote_failed:
+            logger.warning(f"Vector search failed on remote ({error}), retrying on local embedded storage")
+            _remote_failed = True
+            ensure_collection()
+            results = get_embedded_client().query_points(
+                collection_name=COLLECTION_NAME,
+                query=query_embedding,
+                query_filter=search_filter,
+                limit=limit,
+            )
+            return results.points
         logger.error(f"Qdrant search_similar_chunks failed: {error}", exc_info=True)
         raise RuntimeError(f"Vector search failed: {str(error)}") from error
 
@@ -180,12 +235,22 @@ def delete_document_vectors(user_id: str, document_id: str):
         ]
     )
 
+    client = get_qdrant_client()
     try:
         client.delete(
             collection_name=COLLECTION_NAME,
             points_selector=delete_filter,
         )
     except Exception as error:
+        if qdrant_url and not _remote_failed:
+            logger.warning(f"Vector delete failed on remote ({error}), retrying on local embedded storage")
+            _remote_failed = True
+            ensure_collection()
+            get_embedded_client().delete(
+                collection_name=COLLECTION_NAME,
+                points_selector=delete_filter,
+            )
+            return True
         logger.error(f"Failed to delete document vectors from Qdrant: {error}", exc_info=True)
         raise RuntimeError(f"Failed to delete document vectors: {str(error)}") from error
 

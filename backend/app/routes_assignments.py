@@ -224,7 +224,7 @@ def normalize_score(value: Any) -> Optional[int]:
     if value is None:
         return None
 
-    match = re.search(r"\d+(\.\d+)?", str(value))
+    match = re.search(r"-?\d+(\.\d+)?", str(value))
 
     if not match:
         return None

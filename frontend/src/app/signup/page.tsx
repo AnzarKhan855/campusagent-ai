@@ -14,7 +14,11 @@ export default function SignupPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const API_BASE_URL = (
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    "http://127.0.0.1:8000"
+  ).replace(/\/+$/, "");
 
   async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -28,14 +32,14 @@ export default function SignupPage() {
     }
 
     try {
-      const response = await fetch(`${apiUrl}/api/auth/signup`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name,
-          email,
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
           password,
           role,
         }),

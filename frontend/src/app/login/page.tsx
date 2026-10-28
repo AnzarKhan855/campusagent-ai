@@ -12,7 +12,11 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const API_BASE_URL = (
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    "http://127.0.0.1:8000"
+  ).replace(/\/+$/, "");
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -20,13 +24,13 @@ export default function LoginPage() {
     setMessage("");
 
     try {
-      const response = await fetch(`${apiUrl}/api/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email,
+          email: email.trim().toLowerCase(),
           password,
         }),
       });

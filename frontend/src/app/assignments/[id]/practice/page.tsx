@@ -76,11 +76,6 @@ export default function CreatePracticeTestPage() {
     )
   ).sort();
 
-  useEffect(() => {
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assignmentId]);
-
   function getToken() {
     return localStorage.getItem("campusagent_token");
   }
@@ -147,6 +142,11 @@ export default function CreatePracticeTestPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assignmentId]);
 
   async function createPracticeTest() {
     try {

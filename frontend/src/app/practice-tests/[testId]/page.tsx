@@ -77,11 +77,6 @@ export default function PracticeTestAttemptPage() {
   const currentQuestion = questions[currentIndex];
   const isSubmitted = test?.status === "submitted";
 
-  useEffect(() => {
-    fetchPracticeTest();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [testId]);
-
   function getToken() {
     return localStorage.getItem("campusagent_token");
   }
@@ -175,6 +170,11 @@ export default function PracticeTestAttemptPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchPracticeTest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [testId]);
 
   async function saveAnswer(questionIndex: number) {
     try {

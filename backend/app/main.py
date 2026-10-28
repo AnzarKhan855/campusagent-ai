@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -43,15 +44,21 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         },
     )
 
+cors_origins_env = os.getenv("CORS_ORIGINS", "").strip()
+extra_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
+
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://campusagent-ai.vercel.app",
+    "https://campusagent-ai-frontend.vercel.app",
+    *extra_origins,
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"^https://campusagent-ai.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -85,7 +92,7 @@ async def health_check():
     vector_health = ping_vector_store()
 
     is_db_ok = db_status == "connected"
-    is_vector_ok = vector_health.get("connectivity") == "connected"
+    is_vector_ok = "connected" in vector_health.get("connectivity", "") or "fallback_active" in vector_health.get("connectivity", "")
     is_remote = vector_health.get("persistent", False)
 
     is_healthy = is_db_ok and is_vector_ok

@@ -17,8 +17,9 @@ except ImportError:
     Groq = None
 
 # Centralized Model Configuration
-DEFAULT_PRIMARY_MODEL = "groq/compound-mini"
-DEFAULT_FALLBACK_MODEL = "qwen/qwen3.8-27b"
+# Active verified Groq models for fast inference
+DEFAULT_PRIMARY_MODEL = "qwen/qwen3.8-27b"
+DEFAULT_FALLBACK_MODEL = "openai/gpt-oss-20b"
 
 
 def get_groq_api_key() -> str:
@@ -32,14 +33,15 @@ def get_groq_api_key() -> str:
 
 def get_primary_model() -> str:
     configured = os.getenv("GROQ_MODEL", "").strip()
-    # If legacy/deprecated llama-3.1-8b-instant was left in environment, override with active model
-    if not configured or "llama-3.1-8b-instant" in configured:
+    # If legacy/unavailable model identifiers are in environment, map to verified active primary
+    if not configured or "llama-3.1-8b-instant" in configured or "compound-mini" in configured:
         return DEFAULT_PRIMARY_MODEL
     return configured
 
 def get_fallback_model() -> str:
     configured = os.getenv("GROQ_FALLBACK_MODEL", "").strip()
-    if not configured or "llama-3.1-8b-instant" in configured:
+    primary = get_primary_model()
+    if not configured or "llama-3.1-8b-instant" in configured or "compound-mini" in configured or configured == primary:
         return DEFAULT_FALLBACK_MODEL
     return configured
 

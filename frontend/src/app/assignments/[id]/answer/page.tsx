@@ -119,6 +119,104 @@ export default function AssignmentAnswerPage() {
   const primaryButtonClass =
     "rounded-xl border border-slate-700 bg-[#111827] px-4 py-2 text-sm font-semibold text-slate-200 transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-400 hover:bg-emerald-500 hover:text-slate-950 hover:shadow-lg hover:shadow-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60";
 
+  function getToken() {
+    return localStorage.getItem("campusagent_token");
+  }
+
+  function normalizeDifficulty(value?: string): Difficulty {
+    const difficulty = String(value || "medium").toLowerCase();
+
+    if (
+      difficulty === "easy" ||
+      difficulty === "medium" ||
+      difficulty === "hard"
+    ) {
+      return difficulty;
+    }
+
+    return "medium";
+  }
+
+  function normalizeTopic(value?: string) {
+    return String(value || "").trim();
+  }
+
+  function getDifficultyBadgeClass(difficulty?: string) {
+    const normalized = normalizeDifficulty(difficulty);
+
+    if (normalized === "easy") {
+      return "border-emerald-500/30 bg-emerald-500/10 text-emerald-300";
+    }
+
+    if (normalized === "hard") {
+      return "border-red-500/30 bg-red-500/10 text-red-300";
+    }
+
+    return "border-blue-500/30 bg-blue-500/10 text-blue-300";
+  }
+
+  function hasAIAnswer(question?: QuestionItem) {
+    if (!question) return false;
+    return Boolean(question.ai_generated_answer?.trim());
+  }
+
+  function hasAutoTag(question?: QuestionItem) {
+    if (!question) return false;
+
+    return (
+      Boolean(question.auto_tagged_at?.trim()) ||
+      Boolean(question.topic_tag?.trim())
+    );
+  }
+
+  function hasSavedEvaluation(question?: QuestionItem) {
+    if (!question) return false;
+
+    const hasScore =
+      question.ai_score !== undefined && question.ai_score !== null;
+
+    const hasOldScore =
+      question.score !== undefined && question.score !== null;
+
+    const hasFeedback = Boolean(question.ai_feedback?.trim());
+    const hasImprovedAnswer = Boolean(question.improved_answer?.trim());
+    const hasEvaluatedAt = Boolean(question.evaluated_at?.trim());
+
+    return (
+      hasScore ||
+      hasOldScore ||
+      hasFeedback ||
+      hasImprovedAnswer ||
+      hasEvaluatedAt
+    );
+  }
+
+  function formatDate(value?: string) {
+    if (!value) return "Not available";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleString();
+  }
+
+  function renderList(items?: string[]) {
+    if (!items || items.length === 0) {
+      return <p className="mt-2 text-sm text-slate-400">No points saved.</p>;
+    }
+
+    return (
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-slate-300">
+        {items.map((item, index) => (
+          <li key={`${item}-${index}`}>{item}</li>
+        ))}
+      </ul>
+    );
+  }
+
   const questions = assignment?.questions || [];
   const totalQuestions = questions.length;
 
@@ -267,109 +365,6 @@ export default function AssignmentAnswerPage() {
       ? Math.round((answeredCount / totalQuestions) * 100)
       : 0);
 
-  useEffect(() => {
-    fetchAssignment();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assignmentId]);
-
-  function getToken() {
-    return localStorage.getItem("campusagent_token");
-  }
-
-  function normalizeDifficulty(value?: string): Difficulty {
-    const difficulty = String(value || "medium").toLowerCase();
-
-    if (
-      difficulty === "easy" ||
-      difficulty === "medium" ||
-      difficulty === "hard"
-    ) {
-      return difficulty;
-    }
-
-    return "medium";
-  }
-
-  function normalizeTopic(value?: string) {
-    return String(value || "").trim();
-  }
-
-  function getDifficultyBadgeClass(difficulty?: string) {
-    const normalized = normalizeDifficulty(difficulty);
-
-    if (normalized === "easy") {
-      return "border-emerald-500/30 bg-emerald-500/10 text-emerald-300";
-    }
-
-    if (normalized === "hard") {
-      return "border-red-500/30 bg-red-500/10 text-red-300";
-    }
-
-    return "border-blue-500/30 bg-blue-500/10 text-blue-300";
-  }
-
-  function hasAIAnswer(question?: QuestionItem) {
-    if (!question) return false;
-    return Boolean(question.ai_generated_answer?.trim());
-  }
-
-  function hasAutoTag(question?: QuestionItem) {
-    if (!question) return false;
-
-    return (
-      Boolean(question.auto_tagged_at?.trim()) ||
-      Boolean(question.topic_tag?.trim())
-    );
-  }
-
-  function hasSavedEvaluation(question?: QuestionItem) {
-    if (!question) return false;
-
-    const hasScore =
-      question.ai_score !== undefined && question.ai_score !== null;
-
-    const hasOldScore =
-      question.score !== undefined && question.score !== null;
-
-    const hasFeedback = Boolean(question.ai_feedback?.trim());
-    const hasImprovedAnswer = Boolean(question.improved_answer?.trim());
-    const hasEvaluatedAt = Boolean(question.evaluated_at?.trim());
-
-    return (
-      hasScore ||
-      hasOldScore ||
-      hasFeedback ||
-      hasImprovedAnswer ||
-      hasEvaluatedAt
-    );
-  }
-
-  function formatDate(value?: string) {
-    if (!value) return "Not available";
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return value;
-    }
-
-    return date.toLocaleString();
-  }
-
-  function renderList(items?: string[]) {
-    if (!items || items.length === 0) {
-      return <p className="mt-2 text-sm text-slate-400">No points saved.</p>;
-    }
-
-    return (
-      <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-slate-300">
-        {items.map((item, index) => (
-          <li key={`${item}-${index}`}>{item}</li>
-        ))}
-      </ul>
-    );
-  }
-
   async function fetchAssignment() {
     try {
       setLoading(true);
@@ -423,6 +418,11 @@ export default function AssignmentAnswerPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchAssignment();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assignmentId]);
 
   async function saveAnswer(questionIndex: number) {
     try {
